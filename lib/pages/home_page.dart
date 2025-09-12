@@ -19,7 +19,6 @@ class _HomePageState extends State<HomePage> {
       explanations: 195,
       isCommunity: true,
       byYou: false,
-      accentColor: const Color(0xFF2F9BFF),
     ),
     StudySetItem(
       id: '2',
@@ -28,7 +27,6 @@ class _HomePageState extends State<HomePage> {
       explanations: 294,
       isCommunity: true,
       byYou: false,
-      accentColor: const Color(0xFFFF4D4D),
     ),
   ];
 

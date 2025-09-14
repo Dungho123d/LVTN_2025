@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/pages/login_page.dart';
-import 'package:study_application/theme.dart'; // theme chung
+import 'package:study_application/utils/theme.dart'; // theme chung
 
 class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});

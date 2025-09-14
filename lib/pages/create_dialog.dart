@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:study_application/pages/study_sets/create_set.dart';
+import 'package:study_application/pages/study_sets/detail/materials.dart';
 
 /// Trả về Future để chỗ gọi có thể `await` (đổi icon +/X)
 Future<void> openCreateBubbles(
@@ -113,8 +115,7 @@ class _BubbleOverlayState extends State<_BubbleOverlay>
               const SizedBox(width: 28),
               _AnimatedBubble(
                 anim: centerIn,
-                // nhích lên 1 chút ở giữa
-                offsetY: -8,
+                offsetY: -16,
                 child: _Bubble(
                   size: widget.centerSize,
                   color: Colors.blue.shade100,

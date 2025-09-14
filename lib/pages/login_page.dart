@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/pages/home_page.dart';
 import 'package:study_application/pages/register_page.dart';
-import 'package:study_application/theme.dart'; // dùng theme chung
+import 'package:study_application/utils/theme.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/pages/dashboard.dart';
-import 'package:study_application/theme.dart'; // import theme
+import 'package:study_application/utils/theme.dart'; // import theme
 
 void main() {
   runApp(const MyApp());

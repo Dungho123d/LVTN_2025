@@ -4,7 +4,7 @@ class AppTheme {
   static const Color mainTeal = Color(0xFF00A6B2); // màu theo ảnh bạn gửi
 
   static ThemeData lightTheme = ThemeData(
-    primaryColor: mainTeal, // dùng trực tiếp
+    primaryColor: mainTeal,
     scaffoldBackgroundColor: Colors.white,
     appBarTheme: const AppBarTheme(
       backgroundColor: mainTeal,

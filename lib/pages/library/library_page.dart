@@ -1,36 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:study_application/pages/explore_page/explanations_tab.dart';
-import 'package:study_application/pages/explore_page/flashcards_tab.dart';
-import 'package:study_application/pages/study_sets/detail/detail_set.dart';
-import 'package:study_application/utils/color.dart'; // <-- thêm
+import 'package:study_application/manager/studysets_manager.dart';
+import 'package:study_application/model/study_set.dart'; // Thay thế StudySetItem bằng StudySet
+import 'package:study_application/pages/library/explanations_tab.dart';
+import 'package:study_application/pages/library/flashcards_tab.dart';
+import 'package:study_application/pages/study_sets/detail/materials.dart'; // StudySetDetailPage
+import 'package:study_application/utils/color.dart'; // AppColors.randomAccent()
 
-/// ====================== PUBLIC PAGE API ======================
-class ExplorePage extends StatefulWidget {
-  final List<StudySetItem> items;
-  final ValueChanged<ExploreTab>? onTabChanged;
+/// ====================== PUBLIC PAGE ======================
+class LibraryPage extends StatefulWidget {
+  const LibraryPage({super.key, this.onTabChanged, this.onSearch});
+
+  final ValueChanged<LibraryTab>? onTabChanged;
   final ValueChanged<String>? onSearch;
 
-  const ExplorePage({
-    super.key,
-    required this.items,
-    this.onTabChanged,
-    this.onSearch,
-  });
-
   @override
-  State<ExplorePage> createState() => _ExplorePageState();
+  State<LibraryPage> createState() => _LibraryPageState();
 }
 
 /// ====================== STATE / UI ROOT ======================
-class _ExplorePageState extends State<ExplorePage> {
-  ExploreTab _currentTab = ExploreTab.studySets;
+class _LibraryPageState extends State<LibraryPage> {
+  LibraryTab _currentTab = LibraryTab.studySets;
   final ValueNotifier<Set<String>> _filters = ValueNotifier(const {});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
-      appBar: _ExploreAppBar(
+      appBar: _LibraryAppBar(
         onSearchTap: () async {
           final controller = TextEditingController();
           final text = await showDialog<String>(
@@ -56,10 +52,9 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
-  List<StudySetItem> _applyFilter(
-    List<StudySetItem> items,
+  List<StudySet> _applyFilter(
+    List<StudySet> items,
     Set<String> filters,
-    ExploreTab tab,
   ) {
     return items.where((e) {
       bool ok = true;
@@ -71,9 +66,9 @@ class _ExplorePageState extends State<ExplorePage> {
 
   Widget _buildTabBody() {
     switch (_currentTab) {
-      case ExploreTab.studySets:
-        final filtered =
-            _applyFilter(widget.items, _filters.value, _currentTab);
+      case LibraryTab.studySets:
+        // Sử dụng dữ liệu từ StudySetManager
+        final filtered = _applyFilter(StudySetManager.demoSets, _filters.value);
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           itemCount: filtered.length,
@@ -85,9 +80,7 @@ class _ExplorePageState extends State<ExplorePage> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => StudySetDetailPage(
-                      title: item.title, // truyền tiêu đề sang trang detail
-                    ),
+                    builder: (_) => StudySetDetailPage(title: item.title),
                   ),
                 );
               },
@@ -95,18 +88,19 @@ class _ExplorePageState extends State<ExplorePage> {
           },
         );
 
-      case ExploreTab.flashcards:
+      case LibraryTab.flashcards:
         return const FlashcardsTab();
-      case ExploreTab.explanations:
+
+      case LibraryTab.explanations:
         return ExplanationsTab();
     }
   }
 }
 
 /// ====================== APP BAR ======================
-class _ExploreAppBar extends StatelessWidget implements PreferredSizeWidget {
+class _LibraryAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onSearchTap;
-  const _ExploreAppBar({this.onSearchTap});
+  const _LibraryAppBar({this.onSearchTap});
 
   @override
   Size get preferredSize => const Size.fromHeight(56);
@@ -129,7 +123,7 @@ class _ExploreAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       title: const Text(
-        'Explore',
+        'Library',
         style: TextStyle(
           color: Colors.black87,
           fontWeight: FontWeight.w800,
@@ -163,22 +157,24 @@ class _SearchDialog extends StatelessWidget {
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel')),
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
         FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Search')),
+          onPressed: () => Navigator.pop(context, controller.text),
+          child: const Text('Search'),
+        ),
       ],
     );
   }
 }
 
 /// ====================== TABS (PILLS) ======================
-enum ExploreTab { studySets, flashcards, explanations }
+enum LibraryTab { studySets, flashcards, explanations }
 
 class _TabBarPills extends StatelessWidget {
-  final ExploreTab current;
-  final ValueChanged<ExploreTab> onChanged;
+  final LibraryTab current;
+  final ValueChanged<LibraryTab> onChanged;
   const _TabBarPills({required this.current, required this.onChanged});
 
   @override
@@ -192,24 +188,24 @@ class _TabBarPills extends StatelessWidget {
             Expanded(
               child: _TabPill(
                 label: 'Study Sets',
-                selected: current == ExploreTab.studySets,
-                onTap: () => onChanged(ExploreTab.studySets),
+                selected: current == LibraryTab.studySets,
+                onTap: () => onChanged(LibraryTab.studySets),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: _TabPill(
                 label: 'Flashcards',
-                selected: current == ExploreTab.flashcards,
-                onTap: () => onChanged(ExploreTab.flashcards),
+                selected: current == LibraryTab.flashcards,
+                onTap: () => onChanged(LibraryTab.flashcards),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: _TabPill(
                 label: 'Explanations',
-                selected: current == ExploreTab.explanations,
-                onTap: () => onChanged(ExploreTab.explanations),
+                selected: current == LibraryTab.explanations,
+                onTap: () => onChanged(LibraryTab.explanations),
               ),
             ),
           ],
@@ -247,9 +243,10 @@ class _TabPill extends StatelessWidget {
           boxShadow: selected
               ? [
                   BoxShadow(
-                      color: active.withOpacity(.25),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6))
+                    color: active.withOpacity(.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  )
                 ]
               : null,
         ),
@@ -266,28 +263,9 @@ class _TabPill extends StatelessWidget {
   }
 }
 
-/// ====================== DOMAIN MODEL ======================
-class StudySetItem {
-  final String id;
-  final String title;
-  final int flashcards;
-  final int explanations;
-  final bool isCommunity;
-  final bool byYou;
-
-  const StudySetItem({
-    required this.id,
-    required this.title,
-    required this.flashcards,
-    required this.explanations,
-    required this.isCommunity,
-    required this.byYou,
-  });
-}
-
 /// ====================== CARD ITEM ======================
 class StudySetCard extends StatelessWidget {
-  final StudySetItem item;
+  final StudySet item;
   final VoidCallback? onTap;
   final VoidCallback? onMore;
 
@@ -300,7 +278,7 @@ class StudySetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color accent = AppColors.randomAccent();
+    final Color accent = AppColors.randomAccent(); // màu random mỗi lần build
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
@@ -339,20 +317,19 @@ class StudySetCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Tiêu đề có icon phía trước
-                      // Tiêu đề có icon phía trước (có nền mềm)
+                      // Tiêu đề + icon folder
                       Row(
                         children: [
                           Container(
                             height: 28,
                             width: 28,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF6F7FB), // nền nhạt
-                              borderRadius: BorderRadius.circular(8), // bo góc
-                              border: Border.all(
-                                  color: const Color(0xFFE7E9F0)), // viền mỏng
+                              color: const Color(0xFFF6F7FB),
+                              borderRadius: BorderRadius.circular(8),
+                              border:
+                                  Border.all(color: const Color(0xFFE7E9F0)),
                             ),
-                            padding: const EdgeInsets.all(4), // tránh dính mép
+                            padding: const EdgeInsets.all(4),
                             child: Image.asset(
                               'assets/icons/folder2.png',
                               fit: BoxFit.contain,
@@ -370,6 +347,10 @@ class StudySetCard extends StatelessWidget {
                               ),
                             ),
                           ),
+                          _ProgressCircle(
+                            value: item.progress,
+                            color: accent,
+                          ),
                         ],
                       ),
 
@@ -377,7 +358,7 @@ class StudySetCard extends StatelessWidget {
 
                       // Meta
                       Text(
-                        '${item.flashcards} flashcards  ·  ${item.explanations} explanations',
+                        '${item.flashcards} flashcards  ·  ${item.explanations} explanations  ',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 12,
@@ -389,7 +370,7 @@ class StudySetCard extends StatelessWidget {
                           height: 1, thickness: 1, color: Color(0xFFEFF1F5)),
                       const SizedBox(height: 10),
 
-                      // Chips và actions
+                      // Chips & actions
                       Row(
                         children: [
                           if (item.isCommunity)
@@ -441,6 +422,40 @@ class StudySetCard extends StatelessWidget {
               fontSize: 12,
               color: Colors.grey.shade700,
               fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressCircle extends StatelessWidget {
+  final double value; // 0..1
+  final Color color;
+  const _ProgressCircle({required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = (value * 100).round();
+    return SizedBox(
+      height: 38,
+      width: 38,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          CircularProgressIndicator(
+            value: value.clamp(0, 1),
+            strokeWidth: 4,
+            backgroundColor: color.withOpacity(0.15),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
+          Text(
+            '$percent%',
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: Colors.black87,
             ),
           ),
         ],

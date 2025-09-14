@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/pages/bottom_nav.dart';
-import 'package:study_application/pages/explore_page/study_sets_tab.dart';
+import 'package:study_application/pages/explore/study_sets_tab.dart';
+import 'package:study_application/pages/library/library_page.dart';
+import 'package:study_application/pages/profile/profile_page.dart';
+import 'package:study_application/pages/study_sets/create_set.dart';
+import 'package:study_application/pages/study_sets/detail/materials.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,30 +15,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _current = 0;
-  final demo = [
-    StudySetItem(
-      id: '1',
-      title: 'Microbiology',
-      flashcards: 246,
-      explanations: 195,
-      isCommunity: true,
-      byYou: false,
-    ),
-    StudySetItem(
-      id: '2',
-      title: 'Artificial Intelligence',
-      flashcards: 305,
-      explanations: 294,
-      isCommunity: true,
-      byYou: false,
-    ),
-  ];
 
   late final _pages = [
-    const _HomeBody(), // Trang Home custom
-    ExplorePage(items: demo),
-    const Center(child: Text('Library')),
-    const Center(child: Text('Profile')),
+    const _HomeBody(),
+    ExplorePage(),
+    LibraryPage(),
+    ProfilePage(),
   ];
 
   @override
@@ -154,26 +140,51 @@ class _HomeBody extends StatelessWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 childAspectRatio: 1.2,
-                children: const [
+                children: [
                   _CreateCard(
                     iconPath: 'assets/icons/upload.png',
                     title: 'Upload a file',
                     subtitle: '& get material',
+                    onTap: () {
+                      // TODO: xử lý upload file
+                      debugPrint("Upload file tapped");
+                    },
                   ),
                   _CreateCard(
                     iconPath: 'assets/icons/folder.png',
                     title: 'Create study sets',
                     subtitle: '& get material',
+                    onTap: () async {
+                      final form = await openCreateStudySetDialog(context);
+                      if (form == null) return;
+
+                      if (context.mounted) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                StudySetDetailPage(title: form.name),
+                          ),
+                        );
+                      }
+                    },
                   ),
                   _CreateCard(
                     iconPath: 'assets/icons/notepad.png',
                     title: 'Create notes',
                     subtitle: 'without AI for free',
+                    onTap: () {
+                      // TODO: xử lý tạo note
+                      debugPrint("Create notes tapped");
+                    },
                   ),
                   _CreateCard(
                     iconPath: 'assets/icons/flashcard.png',
                     title: 'Create flashcards',
                     subtitle: 'without AI for free',
+                    onTap: () {
+                      // TODO: xử lý tạo flashcards
+                      debugPrint("Create flashcards tapped");
+                    },
                   ),
                 ],
               ),
@@ -332,67 +343,73 @@ class _CreateCard extends StatelessWidget {
   final String iconPath;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   const _CreateCard({
     required this.iconPath,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 140,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE9ECF3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                height: 52,
-                width: 52,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap, // <-- sử dụng callback
+      child: Container(
+        height: 140,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE9ECF3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  height: 52,
+                  width: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Image.asset(iconPath),
+                  ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Image.asset(iconPath),
-                ),
+                const Spacer(),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
               ),
-              const Spacer(),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
             ),
-          ),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey.shade700,
-              fontWeight: FontWeight.w500,
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

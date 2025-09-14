@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/pages/create_dialog.dart';
-import 'package:study_application/theme.dart';
+import 'package:study_application/utils/theme.dart';
 
 class CustomBottomNav extends StatefulWidget {
   final int currentIndex;

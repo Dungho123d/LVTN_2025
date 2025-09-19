@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:study_application/pages/study_sets/create_set.dart';
-import 'package:study_application/pages/study_sets/detail/materials.dart';
 
 /// Trả về Future để chỗ gọi có thể `await` (đổi icon +/X)
 Future<void> openCreateBubbles(
@@ -10,9 +8,9 @@ Future<void> openCreateBubbles(
   double sideSize = 56,
   double navBottomPadding = 12,
   double lift = 28,
-  VoidCallback? onTask,
+  VoidCallback? onCard,
   VoidCallback? onNote,
-  VoidCallback? onTag,
+  VoidCallback? onFile,
 }) {
   return showGeneralDialog(
     context: context,
@@ -26,9 +24,9 @@ Future<void> openCreateBubbles(
       sideSize: sideSize,
       navBottomPadding: navBottomPadding,
       lift: lift,
-      onTask: onTask,
+      onCard: onCard,
       onNote: onNote,
-      onTag: onTag,
+      onFile: onFile,
     ),
     transitionBuilder: (_, anim, __, child) =>
         FadeTransition(opacity: anim, child: child),
@@ -41,7 +39,7 @@ class _BubbleOverlay extends StatefulWidget {
   final double sideSize;
   final double navBottomPadding;
   final double lift;
-  final VoidCallback? onTask, onNote, onTag;
+  final VoidCallback? onCard, onNote, onFile;
 
   const _BubbleOverlay({
     required this.mainColor,
@@ -49,9 +47,9 @@ class _BubbleOverlay extends StatefulWidget {
     required this.sideSize,
     required this.navBottomPadding,
     required this.lift,
-    this.onTask,
+    this.onCard,
     this.onNote,
-    this.onTag,
+    this.onFile,
   });
 
   @override
@@ -107,7 +105,7 @@ class _BubbleOverlayState extends State<_BubbleOverlay>
                   color: Colors.yellow.shade100,
                   iconPath: 'assets/icons/flashcard.png',
                   onTap: () {
-                    widget.onTask?.call();
+                    widget.onCard?.call();
                     _close();
                   },
                 ),
@@ -134,7 +132,7 @@ class _BubbleOverlayState extends State<_BubbleOverlay>
                   color: Colors.green.shade100,
                   iconPath: 'assets/icons/upload.png',
                   onTap: () {
-                    widget.onTag?.call();
+                    widget.onFile?.call();
                     _close();
                   },
                 ),

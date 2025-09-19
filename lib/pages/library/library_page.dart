@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:study_application/manager/flashcard_manager.dart';
 import 'package:study_application/manager/studysets_manager.dart';
 import 'package:study_application/model/study_set.dart'; // Thay thế StudySetItem bằng StudySet
 import 'package:study_application/pages/library/explanations_tab.dart';
@@ -8,8 +9,14 @@ import 'package:study_application/utils/color.dart'; // AppColors.randomAccent()
 
 /// ====================== PUBLIC PAGE ======================
 class LibraryPage extends StatefulWidget {
-  const LibraryPage({super.key, this.onTabChanged, this.onSearch});
+  const LibraryPage({
+    super.key,
+    required this.manager,
+    this.onTabChanged,
+    this.onSearch,
+  });
 
+  final FlashcardManager manager;
   final ValueChanged<LibraryTab>? onTabChanged;
   final ValueChanged<String>? onSearch;
 
@@ -99,7 +106,7 @@ class _LibraryPageState extends State<LibraryPage> {
         );
 
       case LibraryTab.flashcards:
-        return const FlashcardsTab();
+        return FlashcardsTab(manager: widget.manager);
 
       case LibraryTab.explanations:
         return ExplanationsTab();

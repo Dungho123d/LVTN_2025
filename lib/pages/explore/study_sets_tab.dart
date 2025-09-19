@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/manager/studysets_manager.dart';
-import 'package:study_application/model/study_set.dart'; // Thay thế StudySetItem bằng StudySet
+import 'package:study_application/model/study_set.dart';
 import 'package:study_application/pages/explore/explanations_tab.dart';
 import 'package:study_application/pages/explore/flashcards_tab.dart';
-import 'package:study_application/pages/study_sets/detail/materials.dart'; // StudySetDetailPage
-import 'package:study_application/utils/color.dart'; // AppColors.randomAccent()
+import 'package:study_application/pages/study_sets/detail/materials.dart';
+import 'package:study_application/utils/color.dart';
 
 /// ====================== PUBLIC PAGE ======================
 class ExplorePage extends StatefulWidget {
@@ -67,21 +67,32 @@ class _ExplorePageState extends State<ExplorePage> {
   Widget _buildTabBody() {
     switch (_currentTab) {
       case ExploreTab.studySets:
-        // Sử dụng dữ liệu từ StudySetManager
-        final filtered = _applyFilter(StudySetManager.demoSets, _filters.value);
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          itemCount: filtered.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (_, i) {
-            final item = filtered[i];
-            return StudySetCard(
-              item: item,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => StudySetDetailPage(title: item.title),
-                  ),
+        return ValueListenableBuilder<List<StudySet>>(
+          valueListenable: StudySetManager.listenable,
+          builder: (_, sets, __) {
+            final filtered = _applyFilter(sets, _filters.value);
+            if (filtered.isEmpty) {
+              return const _EmptyState(
+                  message: 'No study sets yet. Create one!');
+            }
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              itemCount: filtered.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (_, i) {
+                final item = filtered[i];
+                return StudySetCard(
+                  item: item,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => StudySetDetailPage(
+                          studySet: item,
+                          title: '',
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             );
@@ -94,6 +105,36 @@ class _ExplorePageState extends State<ExplorePage> {
       case ExploreTab.explanations:
         return ExplanationsTab();
     }
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final String message;
+  const _EmptyState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.folder_open_outlined,
+                size: 48, color: Colors.black26),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -352,9 +393,37 @@ class StudySetCard extends StatelessWidget {
 
                       const SizedBox(height: 6),
 
+                      if ((item.subject?.isNotEmpty ?? false) ||
+                          (item.description?.isNotEmpty ?? false)) ...[
+                        if (item.subject?.isNotEmpty ?? false)
+                          Text(
+                            item.subject!,
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        if (item.description?.isNotEmpty ?? false)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              item.description!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 8),
+                      ] else
+                        const SizedBox(height: 4),
+
                       // Meta
                       Text(
-                        '${item.flashcards} flashcards  ·  ${item.explanations} explanations  ',
+                        '${item.flashcardCount} flashcards  ·  ${item.explanationCount} explanations  ',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 12,

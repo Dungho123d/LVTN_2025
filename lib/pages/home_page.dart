@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:study_application/manager/flashcard_manager.dart';
+import 'package:study_application/model/study_set.dart';
 import 'package:study_application/pages/bottom_nav.dart';
 import 'package:study_application/pages/explore/study_sets_tab.dart';
+import 'package:study_application/pages/flashcards/create_flashcard.dart';
 import 'package:study_application/pages/library/library_page.dart';
 import 'package:study_application/pages/profile/profile_page.dart';
 import 'package:study_application/pages/study_sets/create_set.dart';
@@ -161,8 +164,18 @@ class _HomeBody extends StatelessWidget {
                       if (context.mounted) {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) =>
-                                StudySetDetailPage(title: form.name),
+                            builder: (_) => StudySetDetailPage(
+                              studySet: StudySet(
+                                id: 'temp-${DateTime.now().millisecondsSinceEpoch}',
+                                title: form.name,
+                                flashcards: [],
+                                explanations: [],
+                                progress: 0,
+                                isCommunity: false,
+                                byYou: true,
+                              ),
+                              title: '',
+                            ),
                           ),
                         );
                       }
@@ -173,7 +186,6 @@ class _HomeBody extends StatelessWidget {
                     title: 'Create notes',
                     subtitle: 'without AI for free',
                     onTap: () {
-                      // TODO: xử lý tạo note
                       debugPrint("Create notes tapped");
                     },
                   ),
@@ -182,7 +194,14 @@ class _HomeBody extends StatelessWidget {
                     title: 'Create flashcards',
                     subtitle: 'without AI for free',
                     onTap: () {
-                      // TODO: xử lý tạo flashcards
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CreateFlashcardsPage(
+                            manager: FlashcardManager.demo(),
+                          ),
+                        ),
+                      );
                       debugPrint("Create flashcards tapped");
                     },
                   ),

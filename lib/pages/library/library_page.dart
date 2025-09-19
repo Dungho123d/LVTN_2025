@@ -67,21 +67,31 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildTabBody() {
     switch (_currentTab) {
       case LibraryTab.studySets:
-        // Sử dụng dữ liệu từ StudySetManager
-        final filtered = _applyFilter(StudySetManager.demoSets, _filters.value);
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          itemCount: filtered.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (_, i) {
-            final item = filtered[i];
-            return StudySetCard(
-              item: item,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => StudySetDetailPage(title: item.title),
-                  ),
+        return ValueListenableBuilder<List<StudySet>>(
+          valueListenable: StudySetManager.listenable,
+          builder: (_, sets, __) {
+            final filtered = _applyFilter(sets, _filters.value);
+            if (filtered.isEmpty) {
+              return const _EmptyState(message: 'No study sets saved yet.');
+            }
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              itemCount: filtered.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (_, i) {
+                final item = filtered[i];
+                return StudySetCard(
+                  item: item,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => StudySetDetailPage(
+                          studySet: item,
+                          title: '',
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             );
@@ -94,6 +104,35 @@ class _LibraryPageState extends State<LibraryPage> {
       case LibraryTab.explanations:
         return ExplanationsTab();
     }
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final String message;
+  const _EmptyState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.book_outlined, size: 48, color: Colors.black26),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -356,9 +395,37 @@ class StudySetCard extends StatelessWidget {
 
                       const SizedBox(height: 6),
 
+                      if ((item.subject?.isNotEmpty ?? false) ||
+                          (item.description?.isNotEmpty ?? false)) ...[
+                        if (item.subject?.isNotEmpty ?? false)
+                          Text(
+                            item.subject!,
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        if (item.description?.isNotEmpty ?? false)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              item.description!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 8),
+                      ] else
+                        const SizedBox(height: 4),
+
                       // Meta
                       Text(
-                        '${item.flashcards} flashcards  ·  ${item.explanations} explanations  ',
+                        '${item.flashcardCount} flashcards  ·  ${item.explanationCount} explanations  ',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 12,

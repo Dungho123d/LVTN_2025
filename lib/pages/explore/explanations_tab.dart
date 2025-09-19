@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:study_application/manager/studysets_manager.dart';
 
 /// ===================== PUBLIC TAB =====================
 class ExplanationsTab extends StatelessWidget {
@@ -15,29 +16,25 @@ class ExplanationsTab extends StatelessWidget {
       id: 'e1',
       title: 'The Structure and Function of Cell',
       sizeMB: 1.2,
-      source: 'Microbiology',
-      category: 'Biology',
+      studySetId: '1',
     ),
     ExplanationItem(
       id: 'e2',
       title: 'Data Structures: An Overview',
       sizeMB: 2.3,
-      source: 'Computer Vision',
-      category: 'Computer Science',
+      studySetId: '2',
     ),
     ExplanationItem(
       id: 'e3',
       title: 'Fluid Mechanics: Basic Principles',
       sizeMB: 1.6,
-      source: 'Engineering School',
-      category: 'Engineering',
+      studySetId: '3',
     ),
     ExplanationItem(
       id: 'e4',
       title: 'Algebraic Equations and Inequalities',
       sizeMB: 1.8,
-      source: 'Mathematics',
-      category: 'Mathematics',
+      studySetId: '4',
     ),
   ];
 
@@ -61,16 +58,15 @@ class ExplanationItem {
   final String id;
   final String title;
   final double sizeMB;
-  final String source;
-  final String category;
+  final String studySetId;
+
   final int? views;
 
   const ExplanationItem({
     required this.id,
     required this.title,
     required this.sizeMB,
-    required this.source,
-    required this.category,
+    required this.studySetId,
     this.views,
   });
 }
@@ -139,7 +135,7 @@ class ExplanationCard extends StatelessWidget {
 
               // Meta: size + source
               Text(
-                '${_sizeStr(item.sizeMB)} MB  ·  from ${item.source}',
+                '${_sizeStr(item.sizeMB)} MB  ·  from ${_studySetTitle(item.studySetId)}',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
 
@@ -150,7 +146,8 @@ class ExplanationCard extends StatelessWidget {
               // Chip + views
               Row(
                 children: [
-                  _categoryChip(item.category),
+                  _categoryChip(
+                      _studySetCategory(item.studySetId) ?? 'Unknown'),
                   const Spacer(),
                   if (item.views != null) ...[
                     const SizedBox(width: 6),
@@ -169,6 +166,24 @@ class ExplanationCard extends StatelessWidget {
     // 1 chữ số thập phân nếu cần
     final isInt = mb.truncateToDouble() == mb;
     return isInt ? mb.toStringAsFixed(0) : mb.toStringAsFixed(1);
+  }
+
+  String _studySetTitle(String id) {
+    for (final set in StudySetManager.demoSets) {
+      if (set.id == id) {
+        return set.title;
+      }
+    }
+    return 'Unknown Study Set';
+  }
+
+  String? _studySetCategory(String id) {
+    for (final set in StudySetManager.demoSets) {
+      if (set.id == id) {
+        return set.subject;
+      }
+    }
+    return 'Unknown Study Set';
   }
 
   Widget _docIcon() {

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:study_application/model/explanation.dart';
+import 'package:study_application/model/study_set.dart';
 import 'package:study_application/pages/study_sets/detail/progress_tab.dart';
 
 class StudySetDetailPage extends StatefulWidget {
-  final String title;
-  const StudySetDetailPage({super.key, required this.title});
+  final StudySet studySet;
+  const StudySetDetailPage(
+      {super.key, required this.studySet, required String title});
 
   @override
   State<StudySetDetailPage> createState() => _StudySetDetailPageState();
@@ -18,11 +21,93 @@ class _StudySetDetailPageState extends State<StudySetDetailPage> {
     _FlashItem(title: 'Bacteriology', cards: 25),
   ];
 
-  final _exps = const <_ExplanationItem>[
-    _ExplanationItem(title: 'The Structure and Function of Cell', sizeMB: 1.2),
-    _ExplanationItem(title: 'Medical Virology', sizeMB: 2.5),
-  ];
-  // -------------------------------------------
+  late List<Explanation> _explanations;
+
+  @override
+  void initState() {
+    super.initState();
+    _explanations = List.of(widget.studySet.explanations);
+  }
+
+  Future<void> _handleAddExplanation() async {
+    final newExplanation = await _showAddExplanationDialog();
+    if (newExplanation == null) return;
+
+    setState(() {
+      _explanations.add(newExplanation);
+    });
+  }
+
+  Future<Explanation?> _showAddExplanationDialog() async {
+    final titleController = TextEditingController();
+    final sizeController = TextEditingController();
+    String? errorText;
+
+    return showDialog<Explanation>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text('Add explanation'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    decoration: const InputDecoration(labelText: 'Title'),
+                    onChanged: (_) => setStateDialog(() => errorText = null),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: sizeController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Size (MB)',
+                      errorText: errorText,
+                    ),
+                    onChanged: (_) => setStateDialog(() => errorText = null),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final title = titleController.text.trim();
+                    final sizeRaw = sizeController.text.trim();
+                    final size = double.tryParse(sizeRaw);
+
+                    if (title.isEmpty || size == null) {
+                      setStateDialog(() {
+                        errorText = 'Please enter a valid title and size';
+                      });
+                      return;
+                    }
+
+                    Navigator.pop(
+                      context,
+                      Explanation(
+                        id: 'exp-${DateTime.now().millisecondsSinceEpoch}',
+                        title: title,
+                        sizeMB: size,
+                        studySetId: '',
+                      ),
+                    );
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +123,7 @@ class _StudySetDetailPageState extends State<StudySetDetailPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          widget.title,
+          widget.studySet.title,
           style: const TextStyle(
               color: Colors.black87, fontWeight: FontWeight.w800),
         ),
@@ -85,7 +170,11 @@ class _StudySetDetailPageState extends State<StudySetDetailPage> {
           const SizedBox(height: 14),
           Expanded(
             child: _tab == 0
-                ? _MaterialTab(flash: _flash, exps: _exps)
+                ? _MaterialTab(
+                    flash: _flash,
+                    explanations: _explanations,
+                    onAddExplanation: _handleAddExplanation,
+                  )
                 : const ProgressTab(),
           ),
         ],
@@ -97,10 +186,14 @@ class _StudySetDetailPageState extends State<StudySetDetailPage> {
 /// ================== Material Tab (scroll riêng) ==================
 class _MaterialTab extends StatelessWidget {
   final List<_FlashItem> flash;
-  final List<_ExplanationItem> exps;
+  final List<Explanation> explanations;
+  final VoidCallback onAddExplanation;
 
-  const _MaterialTab({required this.flash, required this.exps});
-
+  const _MaterialTab({
+    required this.flash,
+    required this.explanations,
+    required this.onAddExplanation,
+  });
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -150,14 +243,14 @@ class _MaterialTab extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: _SectionHeader(
-                title: 'Explanations (${exps.length})',
+                title: 'Explanations (${explanations.length})',
                 onViewAll: () {},
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        ...exps.map((e) => _SoftCard(
+        ...explanations.map((e) => _SoftCard(
               child: Row(
                 children: [
                   Expanded(
@@ -235,8 +328,8 @@ class _TwoPillsTab extends StatelessWidget {
 class _SectionHeader extends StatelessWidget {
   final String title;
   final VoidCallback? onViewAll;
-  const _SectionHeader({required this.title, this.onViewAll});
-
+  final VoidCallback? onAdd;
+  const _SectionHeader({required this.title, this.onViewAll, this.onAdd});
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -247,16 +340,34 @@ class _SectionHeader extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
                     color: Colors.black87))),
-        GestureDetector(
-          onTap: onViewAll,
-          child: Row(children: const [
-            Text('View All',
-                style: TextStyle(
-                    color: Colors.black87, fontWeight: FontWeight.w700)),
-            SizedBox(width: 6),
-            Icon(Icons.arrow_forward, size: 16, color: Colors.black87),
-          ]),
-        ),
+        Row(
+          children: [
+            if (onViewAll != null)
+              GestureDetector(
+                onTap: onViewAll,
+                child: Row(children: const [
+                  Text('View All',
+                      style: TextStyle(
+                          color: Colors.black87, fontWeight: FontWeight.w700)),
+                  SizedBox(width: 6),
+                  Icon(Icons.arrow_forward, size: 16, color: Colors.black87),
+                ]),
+              ),
+            if (onAdd != null) ...[
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: onAdd,
+                child: Row(children: const [
+                  Icon(Icons.add, size: 16, color: Colors.black87),
+                  SizedBox(width: 4),
+                  Text('Add',
+                      style: TextStyle(
+                          color: Colors.black87, fontWeight: FontWeight.w700)),
+                ]),
+              ),
+            ],
+          ],
+        )
       ],
     );
   }
@@ -311,10 +422,4 @@ class _FlashItem {
   final String title;
   final int cards;
   const _FlashItem({required this.title, required this.cards});
-}
-
-class _ExplanationItem {
-  final String title;
-  final double sizeMB;
-  const _ExplanationItem({required this.title, required this.sizeMB});
 }

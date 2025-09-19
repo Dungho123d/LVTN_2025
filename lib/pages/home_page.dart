@@ -18,13 +18,36 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _current = 0;
+  late final FlashcardManager _flashcardManager;
+  late final List<Widget> _pages;
 
-  late final _pages = [
-    const _HomeBody(),
-    ExplorePage(),
-    LibraryPage(),
-    ProfilePage(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _flashcardManager = FlashcardManager.demo();
+    _pages = [
+      _HomeBody(onCreateFlashcards: _handleCreateFlashcards),
+      ExplorePage(),
+      LibraryPage(manager: _flashcardManager),
+      ProfilePage(),
+    ];
+  }
+
+  Future<void> _handleCreateFlashcards() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreateFlashcardsPage(
+          manager: _flashcardManager,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    if (result != null) {
+      setState(() => _current = 2);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +80,9 @@ class _HomePageState extends State<HomePage> {
 //
 
 class _HomeBody extends StatelessWidget {
-  const _HomeBody();
+  const _HomeBody({required this.onCreateFlashcards});
+
+  final Future<void> Function() onCreateFlashcards;
 
   @override
   Widget build(BuildContext context) {
@@ -194,14 +219,7 @@ class _HomeBody extends StatelessWidget {
                     title: 'Create flashcards',
                     subtitle: 'without AI for free',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CreateFlashcardsPage(
-                            manager: FlashcardManager.demo(),
-                          ),
-                        ),
-                      );
+                      onCreateFlashcards();
                       debugPrint("Create flashcards tapped");
                     },
                   ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:study_application/manager/flashcard_manager.dart';
 import 'package:study_application/manager/studysets_manager.dart';
 import 'package:study_application/model/study_set.dart';
 import 'package:study_application/pages/explore/explanations_tab.dart';
@@ -21,6 +22,19 @@ class ExplorePage extends StatefulWidget {
 class _ExplorePageState extends State<ExplorePage> {
   ExploreTab _currentTab = ExploreTab.studySets;
   final ValueNotifier<Set<String>> _filters = ValueNotifier(const {});
+  late final FlashcardManager _flashcardManager;
+
+  @override
+  void initState() {
+    super.initState();
+    _flashcardManager = FlashcardManager.demo();
+  }
+
+  @override
+  void dispose() {
+    _flashcardManager.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +114,7 @@ class _ExplorePageState extends State<ExplorePage> {
         );
 
       case ExploreTab.flashcards:
-        return const FlashcardsTab();
+        return FlashcardsTab(manager: _flashcardManager);
 
       case ExploreTab.explanations:
         return ExplanationsTab();

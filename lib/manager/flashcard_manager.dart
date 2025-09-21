@@ -83,6 +83,29 @@ class FlashcardManager extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Gắn một flashcard vào study set
+  void attachToStudySet({
+    required String cardId,
+    required String studySetId,
+  }) {
+    final index = _flashcards.indexWhere((c) => c.id == cardId);
+    if (index == -1) return;
+    final card = _flashcards[index];
+    if (card.studySetId == studySetId) return;
+    _flashcards[index] = card.copyWith(studySetId: studySetId);
+    notifyListeners();
+  }
+
+  /// Bỏ gắn kết flashcard khỏi study set
+  void detachFromStudySet(String cardId) {
+    final index = _flashcards.indexWhere((c) => c.id == cardId);
+    if (index == -1) return;
+    final card = _flashcards[index];
+    if (card.studySetId == null) return;
+    _flashcards[index] = card.copyWith(studySetId: null);
+    notifyListeners();
+  }
+
   /// Xoá tất cả
   void clear() {
     _flashcards.clear();
@@ -94,8 +117,10 @@ class FlashcardManager extends ChangeNotifier {
     final m = FlashcardManager();
     m.create(term: 'Mitochondria', definition: 'The powerhouse of the cell.');
     m.create(
-        term: 'Cell Membrane',
-        definition: 'Controls what enters and exits the cell.');
+      term: 'Cell Membrane',
+      definition: 'Controls what enters and exits the cell.',
+      studySetId: '1',
+    );
     return m;
   }
 }

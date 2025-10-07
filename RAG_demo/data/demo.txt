@@ -1,0 +1,3 @@
+LangChain là framework để xây ứng dụng AI sử dụng LLM.
+FAISS là thư viện tìm kiếm vector của Facebook.
+BM25 là thuật toán tìm kiếm dựa trên từ khóa.

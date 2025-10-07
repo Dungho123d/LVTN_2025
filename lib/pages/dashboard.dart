@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:study_application/pages/login_page.dart';
-import 'package:study_application/pages/register_page.dart';
+import 'package:study_application/pages/auth/login_page.dart';
+
+import 'package:study_application/pages/auth/register_page.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});

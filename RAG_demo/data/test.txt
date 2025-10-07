@@ -1,0 +1,596 @@
+Câu hỏi 1 Which of the following statements is correct?
+a. Guest OS accesses the hardware through both hypervisor and underlying host OS
+b. Hypervisors run on a host operating system
+c. Type 1 Hypervisor Interacts with the hardware directly
+d. Hypervisor asks OS to make hardware calls
+Câu hỏi 2 Which of the following is associated with an Active Directory forest (Choose all that apply)?
+a. Represents the broadest element in Active Directory
+b. Contains trees with different naming structures
+c. Allows independent domain administration
+d. Contains domains with different schemas
+Câu hỏi 3 Which of the following is the core logical structure container in Active Directory? Select one: 
+Domain 
+Forest 
+Site 
+OU 
+Câu hỏi 4 Which of the following is a default folder object in Active Directory? Select one: 
+Computers 
+Domain Controllers 
+Groups 
+Sites 
+Câu hỏi 5 Which of the following statements is correct? 
+a. Hypervisor asks OS to make hardware calls 
+b. Type 2 Hypervisor asks OS to make hardware calls 
+c. Guest OS accesses the hardware through both hypervisor and underlying host OS 
+d. Hypervisors run on a host operating system
+Câu hỏi 6 Which filesystem feature of Windows Server 2019 allows you to create large volumes that span multiple physical storage devices?
+a. Storage Spaces
+b. EXT4
+c. ReFS
+d. Storage Migration Service
+Câu hỏi 7 Which of the following is not a type of user account that can be configured in Windows Server 2019?
+a. Network accounts
+b. Built-in accounts
+c. Local accounts
+d. Domain accounts
+Câu hỏi 8 Which of the following FSMO roles are stored on one domain controller within each domain? (Choose all that apply.)
+a. PDC Emulator
+b. RID Master
+c. Domain Naming Master
+d. Schema Master
+Câu hỏi 9 Which of the following occurs when you join a computer to an Active Directory domain? (Choose all that apply.)
+a. A computer account is created within Active Directory, if one has not been prestaged
+b. The Domain Admins group is added to the local Administrators group
+c. The SAM database is replaced by the Active Directory database
+d. The Domain Users group is added to the local Users group
+Câu hỏi 10 Which operating system includes Server Manager?
+a. Windows Server 2022
+b. Windows 10
+c. macOS
+d. Linux
+Câu hỏi 11 Which of the following group scopes can contain objects from any domain within the forest? (Choose all that apply.) 
+a. Universal 
+b. Domain local 
+c. Global 
+d. Distribution 
+Câu hỏi 12 Which of the following does an Active Directory client use to locate objects in another domain? 
+a. DNS 
+b. Schema 
+c. Global Catalog 
+d. DHCP
+Câu hỏi 13 What is the purpose of the SRV (Service Location) record? 
+a. SRV record is used to identify the Name service for a domain 
+b. SRV record is used to identify the zone configuration for a domain 
+c. SRV record is used to identify the Email servers of a domain 
+d. SRV record is used to identify the FQDN of a domain controller that provides Active Directory Services 
+Câu hỏi 14 Which of the following represents the maximum amount of time that a DNS server or resolver is allowed to cache the result of a forward lookup? 
+a. PTR 
+b. Root hints 
+c. TTL 
+d. Zone transfer
+Câu hỏi 15 Which DHCP option number provides a default gateway router? 
+a. '003 
+b. '005 
+c. '004 
+d. '006 
+Câu hỏi 16 You are the network administrator for a company. You have been asked to set up DNS setting for all clients using DHCP. Which option would you configure? Select one: 
+a. 003 Router 
+b. 006 DNS 
+c. 028 Broadcast Address 
+d. 015 DNS Domain Name 
+Câu hỏi 17 After obtaining certificate from a CA server inside your network and install it on web server to enable HTTPS, the user browses this web sites receives a warning say that “name mismatch error.” This problem happens because _________ Select one: 
+The SSL certificate is issued by non-trusted CA 
+The web server does not have a domain name 
+The domain name in the SSL certificate doesn't match the address that is in the address bar of the browser 
+The SSL certificate contains multiple domain names
+Câu hỏi 18 You are configuring a DFS replication group to synchronize folder contents between four file servers. To minimize the network bandwidth used by DFS replication, you should choose a Full mesh topology for your replication group.
+Hãy chọn một:
+Đúng
+Sai
+Câu hỏi 19 What is the purpose of hosting multiple websites on a single IIS server? (choose two)
+a. To utilize server resources more efficiently
+b. To load balancing
+c. To reduce the number of servers needed
+d. To increase website speed
+Câu hỏi 20 Why might you choose to use a self-signed certificate?
+a. To comply with security regulations
+b. To avoid using encryption
+c. To improve website performance
+d. To save on the cost of a certificate
+Câu hỏi 21 Which port is commonly used for HTTPS traffic? 
+a. 80 
+b. 8080 
+c. 443 
+d. 143 
+Câu hỏi 22 In FSRM, what is a quota template? (Choose all that apply.)
+a. A list of user permissions for a folder 
+b. A backup schedule 
+c. A pre-defined set of rules for monitoring file system activity 
+d. A predefined quota that can be applied to multiple folders
+Câu hỏi 23 Which protocol does SMB primarily use to provide shared access to files, printers, and serial ports? (Choose all that apply.)
+a. SNMP 
+b. HTTP 
+c. FTP 
+d. TCP/IP 
+Câu hỏi 24 Which tool is used to configure and manage FSRM in Windows Server? (Choose all that apply.)
+a. File Server Remote Manager 
+b. DFS Management Console 
+c. File Service Resource Manager 
+d. File Server Resource Manager 
+Câu hỏi 25 You would like to provide a central shared folder that users can access to view all other shared folders within the organization. What must you do? (Choose all that apply.) 
+a. Configure a replication group 
+b. Install the DFS Namespaces role and configure a DFS namespace 
+c. Install the DFS Replication role on each file server 
+d. Add targets to the DFS namespace for each shared folder 
+Câu hỏi 26 Which of the following is used to prove the authenticity of a digital certificate? (Choose all that apply.)
+a. A digital signature from the issuing Certificate Authority 
+b. A private key 
+c. A Certificate Revocation List (CRL) 
+d. A public key 
+Câu hỏi 27 Which of the following best describes a Self-Signed Certificate? (Choose all that apply.)
+a. A certificate issued by a trusted third-party Certificate Authority (CA) 
+b. A certificate that is only valid for use within the local network 
+c. A certificate issued specifically for SSL/TLS communication 
+d. A certificate that is signed by the private key of the certificate holder, rather than a trusted CA 
+Câu hỏi 28 What is the name of the entity responsible for issuing digital certificates in a Public Key Infrastructure (PKI)? (Choose all that apply.)
+a. Certification Authority (CA) 
+b. Private Key Manager (PKM) 
+c. Certificate Authority Server (CAS) 
+d. Registration Authority (RA) 
+Câu hỏi 29 What is a Group Policy Object (GPO)? (Choose all that apply.)
+a. A collection of policies and settings 
+b. A security certificate 
+c. A user account in Active Directory 
+d. A collection of commandlets 
+Câu hỏi 30 What is the purpose of the "Block Inheritance" setting in Group Policy? (Choose all that apply.)
+a. To prevent a GPO from being applied to child containers 
+b. To prevent higher-level GPOs from applying settings to the container 
+c. To enable faster GPO processing 
+d. To ensure mandatory application of a GPO
+Câu hỏi 31 What happens when a GPO is linked to multiple OUs in a domain? (Choose all that apply.)
+a. The GPO settings are applied cumulatively to all OUs, depending on their precedence. 
+b. The GPO will only apply to the first OU it is linked to. 
+c. The GPO applies only to the last OU linked. 
+d. The GPO settings will be ignored in all OUs except the one with the highest precedence. 
+Câu hỏi 32 In Group Policy, what is the "Enforced" setting used for? (Choose all that apply.)
+a. To enforce software installation rules across the domain 
+b. To prevent the GPO from being overridden by child OUs or other policies 
+c. To ensure the GPO is applied only once per user 
+d. To prevent changes to the GPO by administrators
+Câu hỏi 33 Which tool is commonly used to create and manage Group Policies in Windows Server? (Choose all that apply.)
+a. Server Manager 
+b. Active Directory Sites and Services 
+c. Group Policy Management Console (GPMC) 
+d. Active Directory Users and Computers 
+Câu hỏi 34 What does the term "inheritance" refer to in the context of Group Policy? (Choose all that apply.)
+a. The copying of settings from one GPO to another 
+b. The backup of GPO settings 
+c. The application of settings from parent containers to child containers 
+d. The linking of multiple GPOs to a single OU 
+Câu hỏi 35 What is DirectAccess primarily used for? (Choose all that apply.)
+a. To allow seamless, always-on access to corporate resources for remote users 
+b. To connect branch offices via a private network 
+c. To manage mobile devices remotely 
+d. To provide a VPN connection for remote users 
+Câu hỏi 36 What does AH (Authentication Header) do in IPsec? (Choose all that apply.)
+a. It authenticates the origin of the data and ensures data integrity, but does not encrypt the data. 
+b. It provides encryption for the payload of packets. 
+c. It prevents network congestion by controlling packet flow. 
+d. It is used to compress data before transmission. 
+Câu hỏi 37 Which of the following services is not provided by AH? 
+a. Data Integrity 
+b. Protection against Anti Replay attacks 
+c. Origin Authentication 
+d. Data Confidentiality (encryption) 
+Câu hỏi 38 What is the recommended method for configuring the Network Location Server (NLS) in a DirectAccess setup? (Choose all that apply.)
+a. The NLS should be configured to require multi-factor authentication for clients 
+b. The NLS should be deployed on a publicly accessible server inside the corporate network 
+c. The NLS should only be deployed on a server in the DMZ for better security 
+d. The NLS should be deployed on the DirectAccess server itself to avoid external dependencies 
+Câu hỏi 39 What would be a good characterization of a VPN tunnel extablished between a telecommuter's PC using a VPN client software and a VPN Server at the main location? 
+a. Remote access VPN 
+b. Site to site VPN 
+c. Extranet VPN 
+d. LAN to LAN VPN 
+Câu hỏi 40 Which of the following is not a Layer 2 tunneling protocol? 
+a. L2TP 
+b. IPSEC 
+c. PPTP 
+d. Both IPSEC and PPTP
+
+
+Câu hỏi 1 Which of the following defines the types of objects in Active Directory? Select one: 
+Attribute values 
+GPOs 
+Schema classes 
+Schema attributes 
+Câu hỏi 2 Which of the following is a valid reason for using multiple forests? Select one: 
+Need for different schemas 
+Need for a single global catalog 
+Easy access to all domain resources 
+Centralized management 
+Câu hỏi 3 To which of the following can a GPO be linked? (Choose all that apply.) Select one or more: 
+a. Folders 
+b. Domains 
+c. Sites 
+d. Trees 
+Câu hỏi 4 Which of the following is associated with an Active Directory forest (Choose all that apply)? Select one or more: 
+a. Contains trees with different naming structures 
+b. Contains domains with different schemas 
+c. Represents the broadest element in Active Directory 
+d. Allows independent domain administration 
+Câu hỏi 5 Which of the following statements is correct? 
+a. Hypervisor asks OS to make hardware calls 
+b. Hypervisors run on a host operating system 
+c. Guest OS accesses the hardware through both hypervisor and underlying host OS 
+d. Type 2 Hypervisor asks OS to make hardware calls 
+Câu hỏi 6 Which of the following statements is correct? 
+a. Hypervisors run on a host operating system 
+b. Type 1 Hypervisor contains a small OS to manage the hypervisor configuration and VMs 
+c. Guest OS accesses the hardware through both hypervisor and underlying host OS 
+d. Hypervisor asks OS to make hardware calls 
+Câu hỏi 7 Which of the following does an Active Directory client use to locate objects in another domain? 
+a. DHCP 
+b. DNS 
+c. Global Catalog 
+d. Schema 
+Câu hỏi 8 Which of the following FSMO roles are stored on one domain controller within each domain? (Choose all that apply.) 
+a. RID Master 
+b. Domain Naming Master 
+c. PDC Emulator 
+d. Schema Master 
+Câu hỏi 9 Which of the following is not a type of user account that can be configured in Windows Server 2019? 
+a. Domain accounts 
+b. Built-in accounts 
+c. Local accounts 
+d. Network accounts 
+Câu hỏi 10 Which of the following group scopes can contain objects from any domain within the forest? (Choose all that apply.) 
+a. Universal 
+b. Distribution 
+c. Domain local 
+d. Global
+Câu hỏi 11 Which type of object is used by Active Directory Domain Services to assign authorization on the network? Select one: 
+Users 
+Groups 
+OUs 
+Computers 
+Câu hỏi 12 Which of the following roles can be installed via Server Manager? 
+a. Remote Access 
+b. Domain Controller 
+c. Role and Features 
+d. Active Directory Domian Services 
+Câu hỏi 13 If a DNS server does not contain a zone file that contains the resource records for a lookup, and is not configured as a conditional or default forwarder, it will use its root hints file to perform a recursive query. Hãy chọn một: 
+Đúng
+Sai
+Câu hỏi 14 Which two resource records can you create in a zone to provide the FQDN of an email server for the zone as well as associate this FQDN with an IPv6 address? (Choose two answers.) 
+a. AAAA 
+b. MX 
+c. CNAME 
+d. A 
+Câu hỏi 15 Which DHCP option number provides a default gateway router? 
+a. '004 
+b. '006 
+c. '003 
+d. '005 
+Câu hỏi 16 What is the primary purpose of a PTR record in DNS? 
+a. To map an IP address to a domain name 
+b. To store email server details 
+c. To configure network devices 
+d. To map a domain name to an IP address 
+Câu hỏi 17 Which of the following represents the maximum amount of time that a DNS server or resolver is allowed to cache the result of a forward lookup? 
+a. Root hints 
+b. PTR 
+c. TTL 
+d. Zone transfer 
+Câu hỏi 18 Which of the following NFS shared folder permissions allows computers to access an NFS shared folder and modify content (Choose two) (Câu này còn tranh cãi chỗ Modify)
+a. Full Control 
+b. Change 
+c. Modify 
+d. Read-Write 
+Câu hỏi 19 Which protocol does SMB primarily use to provide shared access to files, printers, and serial ports? (choose all that apply)
+a. HTTP 
+b. FTP 
+c. SNMP 
+d. TCP/IP 
+Câu hỏi 20 Which of the following is the underlying network protocol used by an iSCSI storage network? Select one: 
+iSCSI 
+TCP/IP 
+SCSI 
+SMB
+Câu hỏi 21 In the context of Work Folders, what does the term "sync share" refer to? (choose all that apply)
+a. A shared folder used for file backups 
+b. A server role for managing user accounts 
+c. A location on the server where users' files are stored and synchronized 
+d. A cloud service for file storage 
+Câu hỏi 22 What is the default TCP port for iSCSI? 
+a. 3260 
+b. 3389 
+c. 1443 
+d. 443 
+Câu hỏi 23 What is a file screen in FSRM? (choose all that apply)
+a. A tool to block certain file types from being saved in a folder 
+b. A display of file properties 
+c. A backup utility 
+d. A network monitoring tool 
+Câu hỏi 24 What is the process of removing duplicate copies of repeating data called in the context of data storage? (choose all that apply)
+a. Data Deduplication 
+b. Data Encryption 
+c. Data Compression 
+d. Data cleaning 
+Câu hỏi 25 You would like to provide a central shared folder that users can access to view all other shared folders within the organization. What must you do? (Choose all that apply.) 
+a. Configure a replication group 
+b. Install the DFS Replication role on each file server 
+c. Add targets to the DFS namespace for each shared folder 
+d. Install the DFS Namespaces role and configure a DFS namespace 
+Câu hỏi 26 Which of the following is NOT typically included in a digital certificate? (choose all that apply)
+a. The public key 
+b. The certificate expiration date 
+c. The certificate issuer 
+d. The private key 
+Câu hỏi 27 What is the Common Name (CN) field in a certificate? (choose all that apply)
+a. The algorithm used to generate the certificate 
+b. The expiration date of the certificate 
+c. The Certificate Authority’s identity 
+d. The domain or server name to which the certificate is issued 
+Câu hỏi 28 Which type of certificate is commonly used to secure HTTPS traffic? (choose all that apply)
+a. Code-signing certificate 
+b. Digital signature certificate 
+c. Extended Validation (EV) certificate 
+d. SSL/TLS certificate 
+Câu hỏi 29 Which of the following commands is used to update GPOs? 
+a. gpupdate /setup 
+b. gpupdate /enforce 
+c. gpupdate /force 
+d. gpupdate /run 
+Câu hỏi 30 What is the effect of setting a GPO with the "Enforced" option? (choose all that apply)
+a. It prevents other GPOs from overwriting its settings 
+b. It speeds up GPO processing 
+c. It disables the GPO 
+d. It applies the GPO only during startup 
+Câu hỏi 31 What is a Group Policy Object (GPO)? (choose all that apply)
+a. A security certificate 
+b. A user account in Active Directory 
+c. A collection of commandlets 
+d. A collection of policies and settings 
+Câu hỏi 32 What is the primary purpose of Group Policy in a Windows Server environment? (choose all that apply)
+a. To create web certificates 
+b. To manage email accounts 
+c. To host web applications 
+d. To control user and computer settings
+Câu hỏi 33 Which of the following is NOT a valid type of GPO? (choose all that apply)
+a. OU GPO 
+b. Managed GPO 
+c. Local GPO 
+d. Domain GPO 
+Câu hỏi 34 What does the term "inheritance" refer to in the context of Group Policy? (choose all that apply)
+a. The application of settings from parent containers to child containers 
+b. The linking of multiple GPOs to a single OU 
+c. The backup of GPO settings 
+d. The copying of settings from one GPO to another 
+Câu hỏi 35 In a DirectAccess deployment, what happens if a client cannot reach the Network Location Server (NLS)? (choose all that apply)
+a. The client is treated as being inside the corporate network and cannot connect to external resources 
+b. The client automatically falls back to using a VPN connection 
+c. The client is treated as being outside the corporate network and establishes a DirectAccess tunnel 
+d. The client cannot access any network resources, including internal and external ones 
+Câu hỏi 36 In a DirectAccess deployment, what role does the Network Location Server (NLS) play? (choose all that apply)
+a. It manages routing of DirectAccess traffic to the internet. 
+b. It verifies whether the client is inside or outside the corporate network to enable or disable DirectAccess. 
+c. It authenticates users when they attempt to connect. 
+d. It ensures clients can reach the internal network for resource access. 
+Câu hỏi 37 Which of the following services is not provided by an IPSEC tunnel? 
+a. Data Integrity 
+b. Origin Authentication 
+c. Protection from Spy Ware 
+d. Data Confidentiality 
+Câu hỏi 38 Which of the following is not a Layer 2 tunneling protocol? 
+a. L2TP 
+b. Both IPSEC and PPTP 
+c. PPTP 
+d. IPSEC 
+Câu hỏi 39 How does a DirectAccess client use the Network Location Server (NLS) to determine its network location? (choose all that apply)
+a. It uses a pre-configured static IP address to determine its location 
+b. It checks the availability of the NLS through ICMP echo requests (ping) or an HTTP/HTTPS request 
+c. It relies on DNS to resolve the NLS's IP address 
+d. It queries the NLS only after successfully establishing a VPN connection 
+Câu hỏi 40 Which of the following tunneling protocols is commonly used in Virtual Private Network (VPN) connections? (choose all that apply)
+a. SSL 
+b. IPSec 
+c. HTTPS 
+d. SMTP 
+
+
+Câu hỏi 1 Which of the following is a component of Active Directory’s physical structure?
+A. Organizational units
+B. Domains
+C. Sites
+D. Folders
+Câu hỏi 2 Which of the following is not part of Active Directory's logical structure?
+A. Tree
+B. Forest
+C. Domain Controller
+D. OU
+Câu hỏi 3 Which of the following statements is correct? 
+a. Hypervisor asks OS to make hardware calls 
+b. Type 2 Hypervisor asks OS to make hardware calls 
+c. Guest OS accesses the hardware through both hypervisor and underlying host OS 
+d. Hypervisors run on a host operating system
+Câu hỏi 4 Which of the following is a default folder object in Active Directory?
+A. Computers
+B. Domain Controllers
+C. Groups
+D. Sites
+Câu hỏi 5 Which of the following is associated with an Active Directory forest (Choose all that apply)?
+a. Represents the broadest element in Active Directory
+b. Contains trees with different naming structures
+c. Allows independent domain administration
+d. Contains domains with different schemas
+Câu hỏi 6 Which of the following defines the types of objects in Active Directory?
+A. GPOs
+B. Attribute values
+C. Schema attributes
+D. Schema classes
+Câu hỏi 7 Which of the following best describes the first domain installed in a forest?
+a. Forest root
+b. Child domain
+c. Master domain
+d. Primary tree
+Câu hỏi 8 All domains in a forest have which of the following in common? (Choose all that apply.)
+a. The same schema
+b. The same global catalog
+c. The same domain name
+d. The same user accounts
+Câu hỏi 9 Which two small footprint installation options are available for Windows Server 2019? (Choose two answers.)
+a. Nano Server
+b. Server Core
+c. Windows Container
+d. Windows Server 2019 Standard (Desktop Experience)
+Câu hỏi 10 What advantages are inherent in utilizing a Server Core installation when compared to selecting a Windows Server installation with a GUI? (Choose all that apply.)
+a. less management tasks; 
+b. using PowerShell for managing tasks; 
+c. minimizes OS vulnerabilities; 
+d. user friendly management interface
+Câu hỏi 11 Commands within Windows PowerShell are referred to as
+a. command
+b. cmdlets
+c. cmdlet
+d. batch script
+Câu hỏi 12 Which of the following terms describes the process of granting users access to file server shares by reading their permissions?
+A. Authentication
+B. Authorization
+C. Enumeration
+D. Assignment
+Câu hỏi 13 How many group scopes are the in Active Directory?
+1
+2
+3
+4
+Câu hỏi 14 Which of the following group scopes can contain objects from any domain within the forest? (Choose all that apply.) 
+a. Universal 
+b. Domain local 
+c. Global 
+d. Distribution
+Câu hỏi 15 Which functions does the global catalog provide? (Choose all that apply.)
+Fast object searching
+Universal group membership
+Domain authentication using UPNs
+Time syncronization
+Câu hỏi 16 If you have logged on to a domain-joined Windows machine at least once, you can logon to that machine again even if the machine no longer has the network connection. Explain the reason? 
+A. Windows store the information of the previous session. 
+B. Windows stores username and a hash of a hash of the password in cache. 
+C. Windows store the username and password in cache. 
+D. Windows stores a copy of AD's user account database in cache
+Câu hỏi 17 GPOs assigned to the computer level are applied when computers are:
+Turned on
+Turned off
+Hibernate mode
+Sleep mode
+Câu hỏi 18 Which of the following represent GPO configuration values? Choose two:
+Enabled
+Disabled
+Deny
+Allow
+Câu hỏi 19 Which of the following Active Directory containers can Group Policies be applied?
+Tree
+Forest
+Domains
+OUs
+Câu hỏi 20 Which of the following is not a characteristic of a VPN? 
+A. It is a secure network
+B. It is deployed over a shared infrastructure
+C. It may use tunneling techniques
+D. It does not provide any cost savings to alternate connectivity options
+Câu hỏi 21 Which of the following is not a Layer 2 tunneling protocol? 
+a. L2TP 
+b. IPSEC 
+c. PPTP 
+d. Both IPSEC and PPTP
+Câu hỏi 22 DES, 3DES, and AES are examples of encryption algorithms that use the same key for encryption and decryption. Such encryption algorithms are categorized as: 
+A. Asymmetrical encryption
+B. Symmetrical encryption
+C. Secure Hash Function
+D. Public Key Infrastructure
+Câu hỏi 23 Which of the following services is not provided by an IPSEC tunnel? 
+a. Data Integrity 
+b. Origin Authentication 
+c. Protection from Spy Ware 
+d. Data Confidentiality 
+Câu hỏi 24 Which of the following services is not provided by AH? 
+a. Data Integrity 
+b. Protection against Anti Replay attacks 
+c. Origin Authentication 
+d. Data Confidentiality (encryption) 
+Câu hỏi 25 Which of the following are optional components of a DHCP scope? (câu này cả 4 đều đúng)
+IP address exclusions
+DHCP options
+DHCP policy
+Reservation
+Câu hỏi 26 You want to create a scope for an IPv4 subnet with the address 172.16.16.0/255.255.240.0. How many subnet bits must you configure when you create the scope?’
+20
+21
+22
+24
+Câu hỏi 27 Which resource record stores zone transfer settings?
+SOA
+NS
+PTR
+A
+Câu hỏi 28 DHCP servers respond to DHCPDISCOVER packets received from DHCP clients or DHCP relay agents with a DHCPACK packet.
+True
+False
+Câu hỏi 29 Which DHCP option number provides a default gateway router? 
+a. '003 
+b. '005 
+c. '004 
+d. '006 
+Câu hỏi 30 What step does a DNS client perform first to resolve a DNS name?
+A. The client checks its local DNS resolver cache
+B. The client queries its primary DNS server
+C. The client queries its alternate DNS server
+D. The client broadcasts on the local subnet
+Câu hỏi 31 The DHCP client is unable to obtain IP configuration from DHCP server. The administrator checks and see that DHCP server works computer. In addition, the network connection of the client computer is perfect. What could be a problem in this case? (Choose all apply)
+A. The client computer and DHCP are located in a different subnets and there is no relay agent implemented on the client subnet
+B. The scope which provides IP configurations for client subnet run out of IP address
+C. The scope which provides IP configurations for client subnet is inactive
+D. The client computer and DHCP are located in a different subnets implementation on the subnet of DHCP server
+Câu hỏi 32 What is the purpose of the SRV (Service Location) record?
+A. SRV record is used to identify the FQDN of a domain controller that provides Active Directory Services
+B. SRV record is used to identify the Email servers at domain
+C. SRV record is used to identify the Name service for a domain
+D. SRV record is used to identify the zone configuration for a domain
+Câu hỏi 33 If a DNS server does not contain a zone file that contains the resource records for a lookup, and is not configured as a conditional or default forwarder, it will use its root hints file to perform a recursive query. Hãy chọn một: 
+Đúng
+Sai
+Câu hỏi 34 Which of the following NFS shared folder permissions allows computers toaccess an NFS shared folder and modify content (Choose two) (câu này còn tranh cãi chỗ Modify)
+A. Modify
+B. Change
+C. Read-write
+D. Full Control
+Câu hỏi 35 Which statements are correct about Encrypting File System (EFS) (Choose all that apply)
+A. The process of encryption and decryption is transparent to the user and applications
+B. EFS encrypt only particular documents or folders
+C. Users need to input password to access files or folders
+D. EFS requires the computers has TPM to work
+Câu hỏi 36 Which of the following roles can you install in Windows Server 2016 to provide iSCSI storage to other clients?
+a. iSCSI Server role
+b. iSCSI Target Server role
+c. iSCSI Target role
+d. iSCSI Initiator role
+Câu hỏi 37 What is the default TCP port for iSCSI? 
+a. 3260 
+b. 3389 
+c. 1443 
+d. 443 
+Câu hỏi 38 You are configuring a DFS replication group to synchronize folder contents between four file servers. To minimize the network bandwidth used by DFS replication, you should choose a Full mesh topology for your replication group.
+Hãy chọn một:
+Đúng
+Sai
+Câu hỏi 39 Which type of object is used by Active Directory Domain Services to add structure to the directory?
+Groups
+Users
+OUs
+Computers
+Câu hỏi 40 Which of the following is not a type of user account that can be configured in Windows Server 2019?
+a. Network accounts
+b. Built-in accounts
+c. Local accounts
+d. Domain accounts

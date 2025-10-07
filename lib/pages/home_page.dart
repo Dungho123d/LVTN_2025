@@ -6,6 +6,7 @@ import 'package:study_application/pages/explore/study_sets_tab.dart';
 import 'package:study_application/pages/flashcards/create_flashcard.dart';
 import 'package:study_application/pages/library/library_page.dart';
 import 'package:study_application/pages/profile/profile_page.dart';
+import 'package:study_application/pages/rag/rag_document_sheet.dart';
 import 'package:study_application/pages/study_sets/create_set.dart';
 import 'package:study_application/pages/study_sets/detail/materials.dart';
 
@@ -38,9 +39,7 @@ class _HomePageState extends State<HomePage> {
           // Nút tròn draggable
           DraggableCircleButton(
             iconPng: 'assets/images/logo2.png',
-            onTap: () {
-              // TODO: mở chatbot hoặc support
-            },
+            onTap: () => showRagDocumentSheet(context),
           ),
         ],
       ),

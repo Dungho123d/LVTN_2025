@@ -1,4 +1,4 @@
-import 'package:study_application/model/explanation.dart';
+import 'package:study_application/models/explanation.dart';
 
 class ExplanationManager {
   static final demoExplanations = <Explanation>[

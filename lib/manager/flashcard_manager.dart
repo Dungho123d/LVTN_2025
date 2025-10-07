@@ -1,8 +1,7 @@
 // lib/data/flashcard_manager.dart
 import 'package:flutter/foundation.dart';
-import 'package:study_application/model/flashcard.dart';
+import 'package:study_application/models/flashcard.dart';
 
-/// DTO gọn để tạo flashcard mới (không cần truyền id)
 class FlashcardCreate {
   final String term;
   final String definition;

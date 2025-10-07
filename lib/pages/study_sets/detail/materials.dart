@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:study_application/model/explanation.dart';
-import 'package:study_application/model/study_set.dart';
+import 'package:study_application/models/explanation.dart';
+import 'package:study_application/models/study_set.dart';
 import 'package:study_application/pages/study_sets/detail/progress_tab.dart';
 
 class StudySetDetailPage extends StatefulWidget {

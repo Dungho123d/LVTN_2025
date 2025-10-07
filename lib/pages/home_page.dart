@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/manager/flashcard_manager.dart';
-import 'package:study_application/model/study_set.dart';
+import 'package:study_application/models/study_set.dart';
 import 'package:study_application/pages/bottom_nav.dart';
 import 'package:study_application/pages/explore/study_sets_tab.dart';
 import 'package:study_application/pages/flashcards/create_flashcard.dart';
@@ -11,6 +11,7 @@ import 'package:study_application/pages/study_sets/detail/materials.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
+  static const routeName = '/home';
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -78,11 +79,11 @@ class _HomeBody extends StatelessWidget {
                 children: [
                   Image.asset('assets/images/logo.png', height: 60),
                   const Spacer(),
-                  _ChipIcon(icon: Icons.local_fire_department, value: '0'),
-                  const SizedBox(width: 8),
-                  _ChipIcon(icon: Icons.shield_outlined, value: '2'),
-                  const SizedBox(width: 8),
-                  _ChipIcon(icon: Icons.monetization_on_outlined, value: '45'),
+                  // _ChipIcon(icon: Icons.local_fire_department, value: '0'),
+                  // const SizedBox(width: 8),
+                  // _ChipIcon(icon: Icons.shield_outlined, value: '2'),
+                  // const SizedBox(width: 8),
+                  // _ChipIcon(icon: Icons.monetization_on_outlined, value: '45'),
                   const SizedBox(width: 8),
                   const CircleAvatar(radius: 14, child: Text('H')),
                 ],

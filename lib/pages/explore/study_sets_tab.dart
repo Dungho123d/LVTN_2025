@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/manager/studysets_manager.dart';
-import 'package:study_application/model/study_set.dart';
+import 'package:study_application/models/study_set.dart';
 import 'package:study_application/pages/explore/explanations_tab.dart';
 import 'package:study_application/pages/explore/flashcards_tab.dart';
 import 'package:study_application/pages/study_sets/detail/materials.dart';
@@ -9,6 +9,7 @@ import 'package:study_application/utils/color.dart';
 /// ====================== PUBLIC PAGE ======================
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key, this.onTabChanged, this.onSearch});
+  static const routeName = '/explore';
 
   final ValueChanged<ExploreTab>? onTabChanged;
   final ValueChanged<String>? onSearch;

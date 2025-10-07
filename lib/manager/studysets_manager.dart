@@ -1,5 +1,5 @@
 import 'package:study_application/manager/flashcard_manager.dart';
-import 'package:study_application/model/study_set.dart';
+import 'package:study_application/models/study_set.dart';
 import 'package:flutter/foundation.dart';
 
 import 'explanation_manager.dart';

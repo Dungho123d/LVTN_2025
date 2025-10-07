@@ -1,5 +1,5 @@
-import 'package:study_application/model/explanation.dart';
-import 'package:study_application/model/flashcard.dart';
+import 'package:study_application/models/explanation.dart';
+import 'package:study_application/models/flashcard.dart';
 
 class StudySet {
   final String id;

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/manager/studysets_manager.dart';
 import 'package:study_application/manager/user_manager.dart';
-import 'package:study_application/model/study_set.dart';
-import 'package:study_application/model/user.dart';
+import 'package:study_application/models/study_set.dart';
+import 'package:study_application/models/user.dart';
 import 'package:study_application/utils/color.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
+  static const routeName = '/profile';
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +45,7 @@ class ProfilePage extends StatelessWidget {
                     backgroundColor: Colors.white,
                     child: CircleAvatar(
                       radius: 46,
-                      backgroundImage: AssetImage(user.avatarUrl),
+                      // backgroundImage: AssetImage(user.avatarUrl),
                     ),
                   ),
                 ),
@@ -58,15 +59,15 @@ class ProfilePage extends StatelessWidget {
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 6),
-            Text(
-              '${user.age} years old • ${user.degree} in ${user.subject}',
-              style: TextStyle(color: Colors.grey.shade700),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '${user.university} • Year: ${user.year}',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-            ),
+            // Text(
+            //   '${user.age} years old • ${user.degree} in ${user.subject}',
+            //   style: TextStyle(color: Colors.grey.shade700),
+            // ),
+            // const SizedBox(height: 6),
+            // Text(
+            //   '${user.university} • Year: ${user.year}',
+            //   style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            // ),
 
             const SizedBox(height: 20),
             const Divider(thickness: 1, color: Color(0xFFEFF1F5)),

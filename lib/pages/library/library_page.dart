@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/manager/studysets_manager.dart';
-import 'package:study_application/model/study_set.dart'; // Thay thế StudySetItem bằng StudySet
+import 'package:study_application/models/study_set.dart'; // Thay thế StudySetItem bằng StudySet
 import 'package:study_application/pages/library/explanations_tab.dart';
 import 'package:study_application/pages/library/flashcards_tab.dart';
 import 'package:study_application/pages/study_sets/detail/materials.dart'; // StudySetDetailPage
@@ -9,6 +9,7 @@ import 'package:study_application/utils/color.dart'; // AppColors.randomAccent()
 /// ====================== PUBLIC PAGE ======================
 class LibraryPage extends StatefulWidget {
   const LibraryPage({super.key, this.onTabChanged, this.onSearch});
+  static const routeName = '/library';
 
   final ValueChanged<LibraryTab>? onTabChanged;
   final ValueChanged<String>? onSearch;

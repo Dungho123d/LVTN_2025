@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:study_application/manager/flashcard_manager.dart';
-import 'package:study_application/model/flashcard.dart';
+import 'package:study_application/models/flashcard.dart';
 
 /// ====== DRAFT MODEL ======
 class FlashcardDraft {

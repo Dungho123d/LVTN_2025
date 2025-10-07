@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/manager/studysets_manager.dart';
-import 'package:study_application/model/study_set.dart';
+import 'package:study_application/models/study_set.dart';
 
 Future<CreateStudySetResult?> openCreateStudySetDialog(
     BuildContext context) async {

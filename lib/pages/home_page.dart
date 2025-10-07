@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:study_application/manager/explanation_manager.dart';
 import 'package:study_application/manager/flashcard_manager.dart';
+import 'package:study_application/manager/studysets_manager.dart';
 import 'package:study_application/model/study_set.dart';
 import 'package:study_application/pages/bottom_nav.dart';
 import 'package:study_application/pages/explore/study_sets_tab.dart';
@@ -8,6 +10,7 @@ import 'package:study_application/pages/library/library_page.dart';
 import 'package:study_application/pages/profile/profile_page.dart';
 import 'package:study_application/pages/study_sets/create_set.dart';
 import 'package:study_application/pages/study_sets/detail/materials.dart';
+import 'package:study_application/utils/color.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,6 +28,14 @@ class _HomePageState extends State<HomePage> {
     LibraryPage(),
     ProfilePage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    StudySetManager.loadInitialData();
+    FlashcardManager.loadAll();
+    ExplanationManager.loadAll();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,24 +172,15 @@ class _HomeBody extends StatelessWidget {
                       final form = await openCreateStudySetDialog(context);
                       if (form == null) return;
 
-                      if (context.mounted) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => StudySetDetailPage(
-                              studySet: StudySet(
-                                id: 'temp-${DateTime.now().millisecondsSinceEpoch}',
-                                title: form.name,
-                                flashcards: [],
-                                explanations: [],
-                                progress: 0,
-                                isCommunity: false,
-                                byYou: true,
-                              ),
-                              title: '',
-                            ),
+                      if (!context.mounted) return;
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => StudySetDetailPage(
+                            studySet: form.studySet,
+                            title: '',
                           ),
-                        );
-                      }
+                        ),
+                      );
                     },
                   ),
                   _CreateCard(
@@ -193,12 +195,30 @@ class _HomeBody extends StatelessWidget {
                     iconPath: 'assets/icons/flashcard.png',
                     title: 'Create flashcards',
                     subtitle: 'without AI for free',
-                    onTap: () {
+                    onTap: () async {
+                      await StudySetManager.loadInitialData();
+                      final sets = StudySetManager.current;
+                      if (sets.isEmpty) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content:
+                                  Text('Create a study set before adding flashcards.'),
+                            ),
+                          );
+                        }
+                        return;
+                      }
+                      final StudySet target =
+                          sets.firstWhere((set) => set.byYou, orElse: () => sets.first);
+
+                      if (!context.mounted) return;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => CreateFlashcardsPage(
-                            manager: FlashcardManager.demo(),
+                            manager: FlashcardManager.instance,
+                            studySetId: target.id,
                           ),
                         ),
                       );
@@ -468,29 +488,46 @@ class _StudySetSection extends StatelessWidget {
         // Danh sách ngang các card
         SizedBox(
           height: 150,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: const [
-              _StudySetCard(
-                title: 'Cell Biology',
-                flashcards: 45,
-                explanations: 12,
-                progress: 0.58,
-                accentColor: Color(0xFF21C16B), // xanh lá như ảnh
-                isPrivate: true,
-                byYou: true,
-              ),
-              _StudySetCard(
-                title: 'Organic Chemistry – Alkanes',
-                flashcards: 30,
-                explanations: 12,
+          child: ValueListenableBuilder<bool>(
+            valueListenable: StudySetManager.loadingListenable,
+            builder: (_, loading, __) {
+              return ValueListenableBuilder<List<StudySet>>(
+                valueListenable: StudySetManager.listenable,
+                builder: (_, sets, __) {
+                  final items = sets.take(6).toList();
+                  if (loading && items.isEmpty) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (items.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'Create your first study set to see it here.',
+                        style: TextStyle(color: Colors.black54),
+                      ),
+                    );
+                  }
 
-                progress: 0.23,
-                accentColor: Color(0xFFFF7A59), // cam
-                isPrivate: false,
-                byYou: true,
-              ),
-            ],
+                  return ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    itemBuilder: (_, index) {
+                      final set = items[index];
+                      final accent = AppColors.randomAccent();
+                      return _StudySetCard(
+                        title: set.title,
+                        flashcards: set.flashcardCount,
+                        explanations: set.explanationCount,
+                        progress: set.progress,
+                        accentColor: accent,
+                        isPrivate: !set.isCommunity,
+                        byYou: set.byYou,
+                      );
+                    },
+                  );
+                },
+              );
+            },
           ),
         ),
       ],

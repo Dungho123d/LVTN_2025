@@ -1,95 +1,130 @@
 import 'package:flutter/material.dart';
+import 'package:study_application/manager/explanation_manager.dart';
+import 'package:study_application/manager/studysets_manager.dart';
+import 'package:study_application/model/explanation.dart';
+import 'package:study_application/model/study_set.dart';
 
-/// ===================== PUBLIC TAB =====================
-class ExplanationsTab extends StatelessWidget {
-  /// Nếu không truyền [items], tab sẽ dùng [_mockItems].
-  ExplanationsTab({super.key, List<ExplanationItem>? items, this.onSearchTap})
-      : items = items ?? _mockItems;
+class ExplanationsTab extends StatefulWidget {
+  const ExplanationsTab({super.key, this.onSearchTap});
 
-  final List<ExplanationItem> items;
   final VoidCallback? onSearchTap;
 
-  // --------- MOCK DATA (có thể sửa/ thêm tuỳ ý) ---------
-  static final List<ExplanationItem> _mockItems = <ExplanationItem>[
-    ExplanationItem(
-      id: 'e1',
-      title: 'The Structure and Function of Cell',
-      sizeMB: 1.2,
-      source: 'Microbiology',
-      category: 'Biology',
-    ),
-    ExplanationItem(
-      id: 'e2',
-      title: 'Data Structures: An Overview',
-      sizeMB: 2.3,
-      source: 'Computer Vision',
-      category: 'Computer Science',
-    ),
-    ExplanationItem(
-      id: 'e3',
-      title: 'Fluid Mechanics: Basic Principles',
-      sizeMB: 1.6,
-      source: 'Engineering School',
-      category: 'Engineering',
-    ),
-    ExplanationItem(
-      id: 'e4',
-      title: 'Algebraic Equations and Inequalities',
-      sizeMB: 1.8,
-      source: 'Mathematics',
-      category: 'Mathematics',
-    ),
-  ];
+  @override
+  State<ExplanationsTab> createState() => _ExplanationsTabState();
+}
+
+class _ExplanationsTabState extends State<ExplanationsTab> {
+  @override
+  void initState() {
+    super.initState();
+    ExplanationManager.loadAll();
+    StudySetManager.loadInitialData();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (_, i) => ExplanationCard(
-        item: items[i],
-        onTap: () {},
-        onMore: () {},
-      ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: ExplanationManager.loadingAll,
+      builder: (_, loading, __) {
+        return ValueListenableBuilder<String?>(
+          valueListenable: ExplanationManager.errorAll,
+          builder: (_, error, __) {
+            return ValueListenableBuilder<List<Explanation>>(
+              valueListenable: ExplanationManager.listenableAll,
+              builder: (_, explanations, __) {
+                return ValueListenableBuilder<List<StudySet>>(
+                  valueListenable: StudySetManager.listenable,
+                  builder: (_, sets, __) {
+                    final setMap = {for (final set in sets) set.id: set};
+                    final entries = explanations
+                        .map((exp) => _ExplanationEntry(exp, setMap[exp.studySetId]))
+                        .toList();
+
+                    if (loading && entries.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (error != null && entries.isEmpty) {
+                      return _ErrorState(message: error);
+                    }
+                    if (entries.isEmpty) {
+                      return const _ErrorState(
+                        message: 'Your library has no explanations yet.',
+                      );
+                    }
+
+                    final listView = ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                      itemCount: entries.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (_, i) {
+                        final entry = entries[i];
+                        return LibraryExplanationCard(
+                          explanation: entry.explanation,
+                          studySet: entry.studySet,
+                          onTap: () {},
+                          onMore: () {},
+                        );
+                      },
+                    );
+
+                    if (error == null && !loading) {
+                      return listView;
+                    }
+
+                    return Column(
+                      children: [
+                        if (error != null)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                            child: _ErrorBanner(message: error),
+                          ),
+                        Expanded(
+                          child: Stack(
+                            children: [
+                              listView,
+                              if (loading)
+                                const Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Padding(
+                                    padding: EdgeInsets.only(bottom: 16),
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }
 
-/// ===================== MODEL =====================
-class ExplanationItem {
-  final String id;
-  final String title;
-  final double sizeMB;
-  final String source;
-  final String category;
-  final int? views;
-
-  const ExplanationItem({
-    required this.id,
-    required this.title,
-    required this.sizeMB,
-    required this.source,
-    required this.category,
-    this.views,
-  });
-}
-
-/// ===================== CARD =====================
-class ExplanationCard extends StatelessWidget {
-  final ExplanationItem item;
-  final VoidCallback? onTap;
-  final VoidCallback? onMore;
-
-  const ExplanationCard({
+class LibraryExplanationCard extends StatelessWidget {
+  const LibraryExplanationCard({
     super.key,
-    required this.item,
+    required this.explanation,
+    required this.studySet,
     this.onTap,
     this.onMore,
   });
 
+  final Explanation explanation;
+  final StudySet? studySet;
+  final VoidCallback? onTap;
+  final VoidCallback? onMore;
+
   @override
   Widget build(BuildContext context) {
+    final source = studySet?.title ?? 'Unknown Study Set';
+    final category = studySet?.subject ?? 'Unknown Subject';
+
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
@@ -111,14 +146,13 @@ class ExplanationCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Hàng trên: icon + title + more
               Row(
                 children: [
                   _docIcon(),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      item.title,
+                      explanation.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -136,23 +170,18 @@ class ExplanationCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
-
-              // Meta: size + source
               Text(
-                '${_sizeStr(item.sizeMB)} MB  ·  from ${item.source}',
+                '${_sizeStr(explanation.sizeMB)} MB  ·  from $source',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
-
               const SizedBox(height: 12),
               const Divider(height: 1, thickness: 1, color: Color(0xFFEFF1F5)),
               const SizedBox(height: 10),
-
-              // Chip + views
               Row(
                 children: [
-                  _categoryChip(item.category),
+                  _categoryChip(category),
                   const Spacer(),
-                  if (item.views != null) ...[
+                  if (explanation.views != null) ...[
                     const SizedBox(width: 6),
                     const Icon(Icons.public, size: 18, color: Colors.black54),
                   ],
@@ -166,7 +195,6 @@ class ExplanationCard extends StatelessWidget {
   }
 
   static String _sizeStr(double mb) {
-    // 1 chữ số thập phân nếu cần
     final isInt = mb.truncateToDouble() == mb;
     return isInt ? mb.toStringAsFixed(0) : mb.toStringAsFixed(1);
   }
@@ -205,6 +233,76 @@ class ExplanationCard extends StatelessWidget {
           color: Colors.grey.shade800,
           fontWeight: FontWeight.w700,
         ),
+      ),
+    );
+  }
+}
+
+class _ExplanationEntry {
+  const _ExplanationEntry(this.explanation, this.studySet);
+
+  final Explanation explanation;
+  final StudySet? studySet;
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+  const _ErrorState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.description_outlined,
+                size: 48, color: Colors.black26),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  final String message;
+  const _ErrorBanner({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.redAccent.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.redAccent.withOpacity(0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

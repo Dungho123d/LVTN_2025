@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:study_application/manager/studysets_manager.dart';
 import 'package:study_application/model/study_set.dart';
+import 'package:study_application/services/pocketbase_service.dart';
 
 Future<CreateStudySetResult?> openCreateStudySetDialog(
     BuildContext context) async {
@@ -53,7 +54,7 @@ class _CreateStudySetSheetState extends State<_CreateStudySetSheet> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_submitting) return;
     final currentState = _formKey.currentState;
     if (currentState == null) return;
@@ -67,20 +68,36 @@ class _CreateStudySetSheetState extends State<_CreateStudySetSheet> {
     final subject = _subjectController.text.trim();
     final description = _descriptionController.text.trim();
 
-    final StudySet createdSet = StudySetManager.createStudySet(
-      name: name,
-      subject: subject.isEmpty ? null : subject,
-      description: description.isEmpty ? null : description,
-      isPrivate: _isPrivate,
-    );
+    try {
+      final StudySet createdSet = await StudySetManager.createStudySet(
+        name: name,
+        subject: subject.isEmpty ? null : subject,
+        description: description.isEmpty ? null : description,
+        isPrivate: _isPrivate,
+      );
 
-    Navigator.of(context).pop(CreateStudySetResult(
-      name: createdSet.title,
-      subject: subject.isEmpty ? null : subject,
-      description: description.isEmpty ? null : description,
-      isPrivate: _isPrivate,
-      studySet: createdSet,
-    ));
+      if (!mounted) return;
+
+      Navigator.of(context).pop(CreateStudySetResult(
+        name: createdSet.title,
+        subject: subject.isEmpty ? null : subject,
+        description: description.isEmpty ? null : description,
+        isPrivate: _isPrivate,
+        studySet: createdSet,
+      ));
+    } on PocketBaseServiceException catch (error) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create study set: $error')),
+      );
+    }
   }
 
   @override

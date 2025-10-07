@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:study_application/manager/explanation_manager.dart';
 import 'package:study_application/manager/studysets_manager.dart';
 import 'package:study_application/model/study_set.dart'; // Thay thế StudySetItem bằng StudySet
 import 'package:study_application/pages/library/explanations_tab.dart';
@@ -21,6 +22,13 @@ class LibraryPage extends StatefulWidget {
 class _LibraryPageState extends State<LibraryPage> {
   LibraryTab _currentTab = LibraryTab.studySets;
   final ValueNotifier<Set<String>> _filters = ValueNotifier(const {});
+
+  @override
+  void initState() {
+    super.initState();
+    StudySetManager.loadInitialData();
+    ExplanationManager.loadAll();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,29 +75,20 @@ class _LibraryPageState extends State<LibraryPage> {
   Widget _buildTabBody() {
     switch (_currentTab) {
       case LibraryTab.studySets:
-        return ValueListenableBuilder<List<StudySet>>(
-          valueListenable: StudySetManager.listenable,
-          builder: (_, sets, __) {
-            final filtered = _applyFilter(sets, _filters.value);
-            if (filtered.isEmpty) {
-              return const _EmptyState(message: 'No study sets saved yet.');
-            }
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              itemCount: filtered.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (_, i) {
-                final item = filtered[i];
-                return StudySetCard(
-                  item: item,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => StudySetDetailPage(
-                          studySet: item,
-                          title: '',
-                        ),
-                      ),
+        return ValueListenableBuilder<bool>(
+          valueListenable: StudySetManager.loadingListenable,
+          builder: (_, loading, __) {
+            return ValueListenableBuilder<String?>(
+              valueListenable: StudySetManager.errorListenable,
+              builder: (_, error, __) {
+                return ValueListenableBuilder<List<StudySet>>(
+                  valueListenable: StudySetManager.listenable,
+                  builder: (_, sets, __) {
+                    return _buildStudySetContent(
+                      context: context,
+                      sets: sets,
+                      loading: loading,
+                      error: error,
                     );
                   },
                 );
@@ -103,8 +102,77 @@ class _LibraryPageState extends State<LibraryPage> {
 
       case LibraryTab.explanations:
         return ExplanationsTab();
+}
+
+  Widget _buildStudySetContent({
+    required BuildContext context,
+    required List<StudySet> sets,
+    required bool loading,
+    required String? error,
+  }) {
+    final filtered = _applyFilter(sets, _filters.value);
+    if (loading && filtered.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
     }
+    if (error != null && filtered.isEmpty) {
+      return _ErrorState(message: error);
+    }
+    if (filtered.isEmpty) {
+      return const _EmptyState(message: 'No study sets saved yet.');
+    }
+
+    final listView = ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      itemCount: filtered.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (_, i) {
+        final item = filtered[i];
+        return StudySetCard(
+          item: item,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => StudySetDetailPage(
+                  studySet: item,
+                  title: '',
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (error == null && !loading) {
+      return listView;
+    }
+
+    return Column(
+      children: [
+        if (error != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: _ErrorBanner(message: error),
+          ),
+        Expanded(
+          child: Stack(
+            children: [
+              listView,
+              if (loading)
+                const Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 16),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
+}
 }
 
 class _EmptyState extends StatelessWidget {
@@ -131,6 +199,39 @@ class _EmptyState extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  final String message;
+  const _ErrorBanner({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.redAccent.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.redAccent.withOpacity(0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

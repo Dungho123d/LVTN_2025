@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:study_application/manager/flashcard_manager.dart';
-import 'package:study_application/model/flashcard.dart';
+import 'package:study_application/services/pocketbase_service.dart';
 
 /// ====== DRAFT MODEL ======
 class FlashcardDraft {
@@ -26,14 +26,6 @@ class FlashcardDraft {
         defImage: defImage,
       );
 
-  /// Convert sang Flashcard (dùng cho lưu trữ)
-  Flashcard toFlashcard(String id) => Flashcard(
-        id: id,
-        term: term.trim(),
-        definition: definition.trim(),
-        termImage: termImage?.path,
-        defImage: defImage?.path,
-      );
 }
 
 /// ====== PAGE 1: LIST DRAFTS ======
@@ -41,10 +33,12 @@ class CreateFlashcardsPage extends StatefulWidget {
   const CreateFlashcardsPage({
     super.key,
     required this.manager,
+    required this.studySetId,
   });
 
-  /// Inject manager (có thể truyền FlashcardManager.demo() khi dùng thử)
+  /// Inject manager (dựa trên PocketBase service)
   final FlashcardManager manager;
+  final String studySetId;
 
   @override
   State<CreateFlashcardsPage> createState() => _CreateFlashcardsPageState();
@@ -57,6 +51,7 @@ class _CreateFlashcardsPageState extends State<CreateFlashcardsPage> {
     FlashcardDraft(),
   ];
   final _picker = ImagePicker();
+  bool _saving = false;
 
   Future<void> _pickImage({
     required int index,
@@ -98,15 +93,50 @@ class _CreateFlashcardsPageState extends State<CreateFlashcardsPage> {
     }
   }
 
-  void _create() {
-    // Convert tất cả draft -> Flashcard và add vào manager
-    for (final d in _cards) {
-      final id = DateTime.now().microsecondsSinceEpoch.toString();
-      widget.manager.add(d.toFlashcard(id));
+  Future<void> _create() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+
+    final inputs = _cards
+        .where((draft) => draft.term.trim().isNotEmpty && draft.definition.trim().isNotEmpty)
+        .map(
+          (draft) => FlashcardCreate(
+            term: draft.term.trim(),
+            definition: draft.definition.trim(),
+            termImage: draft.termImage?.path,
+            defImage: draft.defImage?.path,
+            studySetId: widget.studySetId,
+          ),
+        )
+        .toList();
+
+    if (inputs.isEmpty) {
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please add at least one flashcard.')),
+        );
+      }
+      return;
     }
 
-    // Có thể trả về danh sách đã tạo nếu muốn
-    Navigator.pop(context, widget.manager.all);
+    try {
+      await widget.manager.createMany(inputs);
+      if (!mounted) return;
+      Navigator.pop(context);
+    } on PocketBaseServiceException catch (error) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create flashcards: $error')),
+      );
+    }
   }
 
   @override
@@ -160,7 +190,7 @@ class _CreateFlashcardsPageState extends State<CreateFlashcardsPage> {
                   elevation: 6,
                   shadowColor: const Color(0xFF00A6B2).withOpacity(.35),
                 ),
-                onPressed: _create,
+                onPressed: _saving ? null : _create,
                 child: const Text('Create',
                     style: TextStyle(
                         color: Colors.white, fontWeight: FontWeight.w800)),

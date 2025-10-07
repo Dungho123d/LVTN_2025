@@ -1,3 +1,5 @@
+import 'package:pocketbase/pocketbase.dart';
+
 class User {
   final String id;
   final String name;
@@ -39,5 +41,46 @@ class User {
       year: year ?? this.year,
       avatarUrl: avatarUrl ?? this.avatarUrl,
     );
+  }
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: (json['id'] ?? json['@id'] ?? '').toString(),
+      name: (json['name'] ?? json['fullName'] ?? json['username'] ?? '').toString(),
+      age: _parseInt(json['age']) ?? 0,
+      university: (json['university'] ?? json['school'] ?? '').toString(),
+      degree: (json['degree'] ?? json['major'] ?? '').toString(),
+      subject: (json['subject'] ?? json['focus'] ?? '').toString(),
+      year: (json['year'] ?? json['academic_year'] ?? '').toString(),
+      avatarUrl: (json['avatarUrl'] ?? json['avatar'] ?? '').toString(),
+    );
+  }
+
+  factory User.fromRecord(RecordModel record) {
+    return User.fromJson(record.toJson());
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'id': id,
+      'name': name,
+      'age': age,
+      'university': university,
+      'degree': degree,
+      'subject': subject,
+      'year': year,
+      'avatarUrl': avatarUrl,
+    };
+    map.removeWhere((_, value) => value == null);
+    return map;
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
   }
 }

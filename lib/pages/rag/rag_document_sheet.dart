@@ -1,10 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 import '../../models/rag_document.dart';
+import '../../service/rag_service.dart';
 
-Future<void> showRagDocumentSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
+Future<RagDocument?> showRagDocumentSheet(BuildContext context) {
+  return showModalBottomSheet<RagDocument?>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -23,14 +26,20 @@ class _RagDocumentSheetState extends State<_RagDocumentSheet>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late List<RagDocument> _documents;
+  final RagApiService _ragService = RagApiService.instance;
   RagDocument? _selected;
   bool _isUploading = false;
+  bool _isLoadingDocs = false;
+  String? _loadError;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _documents = _seedDocuments();
+    _documents = [];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDocuments();
+    });
   }
 
   @override
@@ -139,16 +148,7 @@ class _RagDocumentSheetState extends State<_RagDocumentSheet>
                       child: FilledButton(
                         onPressed: _selected == null || _isUploading
                             ? null
-                            : () {
-                                Navigator.of(context).maybePop();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Đang chuẩn bị hội thoại RAG với "${_selected!.name}"',
-                                    ),
-                                  ),
-                                );
-                              },
+                            : () => Navigator.of(context).maybePop(_selected),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           textStyle: const TextStyle(
@@ -214,7 +214,7 @@ class _RagDocumentSheetState extends State<_RagDocumentSheet>
                   ),
                   const SizedBox(height: 24),
                   FilledButton.icon(
-                    onPressed: _isUploading ? null : _handleSimulatedUpload,
+                    onPressed: _isUploading ? null : _handleDemoUpload,
                     icon: _isUploading
                         ? const SizedBox(
                             height: 18,
@@ -271,6 +271,51 @@ class _RagDocumentSheetState extends State<_RagDocumentSheet>
   }
 
   Widget _buildDocumentTab(ThemeData theme) {
+    if (_isLoadingDocs) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (_loadError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 52,
+                color: Color(0xFFEF4444),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Không thể tải danh sách tài liệu.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _loadError!,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.tonal(
+                onPressed: () => _loadDocuments(),
+                child: const Text('Thử lại'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (_documents.isEmpty) {
       return Center(
         child: Padding(
@@ -325,18 +370,22 @@ class _RagDocumentSheetState extends State<_RagDocumentSheet>
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: ListView.separated(
-              itemCount: _documents.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (_, index) {
-                final doc = _documents[index];
-                final isSelected = doc.id == _selected?.id;
-                return _DocumentTile(
-                  document: doc,
-                  isSelected: isSelected,
-                  onTap: () => setState(() => _selected = doc),
-                );
-              },
+            child: RefreshIndicator(
+              onRefresh: () => _loadDocuments(),
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: _documents.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (_, index) {
+                  final doc = _documents[index];
+                  final isSelected = doc.id == _selected?.id;
+                  return _DocumentTile(
+                    document: doc,
+                    isSelected: isSelected,
+                    onTap: () => setState(() => _selected = doc),
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -344,58 +393,106 @@ class _RagDocumentSheetState extends State<_RagDocumentSheet>
     );
   }
 
-  Future<void> _handleSimulatedUpload() async {
+  Future<void> _handleDemoUpload() async {
     setState(() {
       _isUploading = true;
     });
 
-    await Future<void>.delayed(const Duration(seconds: 2));
+    try {
+      final now = DateTime.now();
+      final sampleText = [
+        '# Demo tài liệu RAG',
+        'Tài liệu được sinh tự động lúc ${now.toIso8601String()} để kiểm tra pipeline tải lên.',
+        'Bạn có thể thay thế bằng nội dung thật bằng cách chỉnh sửa hàm _handleDemoUpload.',
+        'Hướng dẫn:',
+        '- Bước 1: Chạy server FastAPI trong thư mục RAG_demo.',
+        '- Bước 2: Nhấn nút "Chọn tài liệu từ máy" để upload file mẫu.',
+        '- Bước 3: Chọn tài liệu và bắt đầu trò chuyện.',
+      ].join('\n\n');
 
-    final newDoc = RagDocument(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: 'Tai lieu moi ${_documents.length + 1}.pdf',
-      pageCount: 12 + _documents.length * 3,
-      uploadedAt: DateTime.now(),
-    );
+      final uploaded = await _ragService.uploadDocumentBytes(
+        filename: 'demo_rag_notes.txt',
+        bytes: utf8.encode(sampleText),
+        mimeType: 'text/plain',
+      );
 
-    setState(() {
-      _documents = [newDoc, ..._documents];
-      _selected = newDoc;
-      _isUploading = false;
+      if (!mounted) return;
+
+      await _loadDocuments(preferId: uploaded.id);
+      if (!mounted) return;
+
       _tabController.animateTo(1);
-    });
 
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Tải lên thành công "${newDoc.name}"'),
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã tải lên "${uploaded.name}"'),
+        ),
+      );
+    } on RagApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Tải lên thất bại: ${e.message}')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể tải lên tài liệu: $e')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isUploading = false;
+      });
+    }
   }
 
-  List<RagDocument> _seedDocuments() {
-    final now = DateTime.now();
-    return [
-      RagDocument(
-        id: 'doc-01',
-        name: 'Chuong 1 - Dai so tuyen tinh.pdf',
-        pageCount: 28,
-        uploadedAt: now.subtract(const Duration(days: 1)),
-      ),
-      RagDocument(
-        id: 'doc-02',
-        name: 'De cuong on tap Giua ky.docx',
-        pageCount: 9,
-        uploadedAt: now.subtract(const Duration(days: 4)),
-      ),
-      RagDocument(
-        id: 'doc-03',
-        name: 'Tong hop ghi chu Marketing.txt',
-        pageCount: 5,
-        uploadedAt: now.subtract(const Duration(days: 12)),
-      ),
-    ];
+  Future<void> _loadDocuments({String? preferId}) async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingDocs = true;
+      _loadError = null;
+    });
+
+    try {
+      final docs = await _ragService.fetchDocuments();
+      if (!mounted) return;
+      setState(() {
+        _documents = docs;
+        final preferredId = preferId ?? _selected?.id;
+        _selected = preferredId != null
+            ? _findDocumentById(docs, preferredId)
+            : docs.isNotEmpty
+                ? docs.first
+                : null;
+        _selected ??= docs.isNotEmpty ? docs.first : null;
+      });
+    } on RagApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = e.message;
+        _documents = [];
+        _selected = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = e.toString();
+        _documents = [];
+        _selected = null;
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingDocs = false;
+      });
+    }
+  }
+
+  RagDocument? _findDocumentById(List<RagDocument> docs, String id) {
+    for (final doc in docs) {
+      if (doc.id == id) return doc;
+    }
+    return null;
   }
 }
 
@@ -463,7 +560,7 @@ class _DocumentTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Tải lên ngày ${document.uploadedLabel} • ${document.pageCount} trang',
+                      'Tải lên ${document.uploadedLabel} • ${document.chunkLabel}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.grey.shade600,
                       ),

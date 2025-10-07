@@ -6,6 +6,7 @@ import 'package:study_application/pages/explore/study_sets_tab.dart';
 import 'package:study_application/pages/flashcards/create_flashcard.dart';
 import 'package:study_application/pages/library/library_page.dart';
 import 'package:study_application/pages/profile/profile_page.dart';
+import 'package:study_application/pages/rag/rag_chat_page.dart';
 import 'package:study_application/pages/rag/rag_document_sheet.dart';
 import 'package:study_application/pages/study_sets/create_set.dart';
 import 'package:study_application/pages/study_sets/detail/materials.dart';
@@ -39,7 +40,7 @@ class _HomePageState extends State<HomePage> {
           // Nút tròn draggable
           DraggableCircleButton(
             iconPng: 'assets/images/logo2.png',
-            onTap: () => showRagDocumentSheet(context),
+            onTap: _openRagAssistant,
           ),
         ],
       ),
@@ -47,6 +48,16 @@ class _HomePageState extends State<HomePage> {
         currentIndex: _current,
         onItemTap: (i) => setState(() => _current = i),
         onCenterTap: () => setState(() => _current = 2),
+      ),
+    );
+  }
+
+  Future<void> _openRagAssistant() async {
+    final selected = await showRagDocumentSheet(context);
+    if (!mounted || selected == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RagChatPage(document: selected),
       ),
     );
   }

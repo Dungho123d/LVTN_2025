@@ -30,6 +30,8 @@ from rag_data import (
 )
 
 ALLOWED_EXTS = {".pdf", ".docx", ".pptx", ".html", ".htm", ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".txt", ".md"}
+UPLOAD_DIR = Path("./_uploads"); UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+MANIFEST_FILE = UPLOAD_DIR / "manifest.json"
 
 # ---------- ENV ----------
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
@@ -102,6 +104,88 @@ def load_index_if_exists() -> Optional[FAISS]:
         return vs
     except Exception:
         return None
+
+
+def _load_manifest() -> List[Dict[str, Any]]:
+    if not MANIFEST_FILE.exists():
+        return []
+    try:
+        data = json.loads(MANIFEST_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+    if isinstance(data, dict):
+        docs = data.get("documents", [])
+    else:
+        docs = data
+
+    out: List[Dict[str, Any]] = []
+    for item in docs:
+        if isinstance(item, dict):
+            out.append(item)
+    return out
+
+
+def _save_manifest(docs: List[Dict[str, Any]]) -> None:
+    MANIFEST_FILE.parent.mkdir(parents=True, exist_ok=True)
+    payload = {"documents": docs}
+    MANIFEST_FILE.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _manifest_upsert(entry: Dict[str, Any]) -> None:
+    docs = [d for d in _load_manifest() if d.get("source") != entry.get("source")]
+    docs.insert(0, entry)
+    _save_manifest(docs)
+
+
+def _doc_entry_from_chunks(source: str, chunks: List[Document], *, size_bytes: int = 0) -> Dict[str, Any]:
+    quality: Dict[str, int] = {}
+    approx_tokens = 0
+    for ch in chunks:
+        tier = (ch.metadata or {}).get("quality_tier") or "unknown"
+        quality[tier] = quality.get(tier, 0) + 1
+        approx_tokens += int((ch.metadata or {}).get("approx_tokens") or 0)
+
+    return {
+        "id": str(uuid.uuid5(uuid.NAMESPACE_URL, source)),
+        "name": source,
+        "source": source,
+        "chunk_count": len(chunks),
+        "approx_tokens": approx_tokens,
+        "quality_tiers": quality,
+        "size_bytes": size_bytes,
+        "uploaded_at": datetime.utcnow().isoformat(),
+    }
+
+
+def _aggregate_docs_from_vector_store(vs: Optional[FAISS]) -> List[Dict[str, Any]]:
+    if vs is None:
+        return []
+
+    aggregated: Dict[str, Dict[str, Any]] = {}
+    for doc in _all_docs_from_faiss(vs):
+        meta = doc.metadata or {}
+        source = meta.get("source") or "unknown"
+        entry = aggregated.setdefault(
+            source,
+            {
+                "id": str(uuid.uuid5(uuid.NAMESPACE_URL, source)),
+                "name": source,
+                "source": source,
+                "chunk_count": 0,
+                "approx_tokens": 0,
+                "quality_tiers": {},
+                "size_bytes": 0,
+                "uploaded_at": None,
+            },
+        )
+        entry["chunk_count"] = entry.get("chunk_count", 0) + 1
+        entry["approx_tokens"] = entry.get("approx_tokens", 0) + int(meta.get("approx_tokens") or 0)
+        tier = meta.get("quality_tier") or "unknown"
+        quality = entry.setdefault("quality_tiers", {})
+        quality[tier] = int(quality.get(tier, 0) + 1)
+
+    return list(aggregated.values())
 
 # ---------- Hybrid Retriever ----------
 def _all_docs_from_faiss(vs: FAISS, max_docs: int = 5000) -> List[Document]:
@@ -254,6 +338,17 @@ def root():
         "endpoints": ["/health", "/ingest_folder", "/ingest_file", "/search", "/chat", "/reset_index", "/feedback", "/eval_offline"]
     }
 
+@app.get("/documents")
+def list_documents():
+    docs = _load_manifest()
+    if not docs:
+        global vector_store
+        vs = vector_store or load_index_if_exists()
+        if vector_store is None and vs is not None:
+            vector_store = vs
+        docs = _aggregate_docs_from_vector_store(vs)
+    return {"ok": True, "documents": docs}
+
 @app.post("/reset_index")
 def reset_index():
     """Xoá toàn bộ thư mục INDEX_DIR của model embeddings hiện tại. (Không xoá ./_uploads)"""
@@ -262,6 +357,8 @@ def reset_index():
         shutil.rmtree(p, ignore_errors=True)
     global vector_store
     vector_store = None
+    if MANIFEST_FILE.exists():
+        MANIFEST_FILE.unlink()
     return {"ok": True, "message": f"Đã xoá index: {INDEX_DIR}"}
 
 @app.post("/ingest_file")
@@ -272,9 +369,7 @@ def ingest_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
 
     # Save file to temporary directory
-    tmp_dir = Path("./_uploads")
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-    tmp_path = tmp_dir / file.filename
+    tmp_path = UPLOAD_DIR / file.filename
     with open(tmp_path, "wb") as f:
         f.write(file.file.read())
 
@@ -321,7 +416,21 @@ def ingest_file(file: UploadFile = File(...)):
     if msg:
         return {"ok": False, "error": msg}
 
-    return {"ok": True, "file": file.filename, "added_chunks": len(chunks), "index_dir": INDEX_DIR}
+    doc_entry = _doc_entry_from_chunks(
+        file.filename,
+        chunks,
+        size_bytes=tmp_path.stat().st_size if tmp_path.exists() else 0,
+    )
+    _manifest_upsert(doc_entry)
+
+    return {
+        "ok": True,
+        "file": file.filename,
+        "added_chunks": len(chunks),
+        "approx_tokens": doc_entry.get("approx_tokens"),
+        "document": doc_entry,
+        "index_dir": INDEX_DIR,
+    }
 
 @app.post("/ingest_folder")
 def ingest_folder(inp: IngestFolderIn):
@@ -333,6 +442,10 @@ def ingest_folder(inp: IngestFolderIn):
     msg = ensure_index_compatible(vector_store)
     if msg:
         return {"ok": False, "error": msg}
+    if vector_store is not None:
+        manifest_entries = _aggregate_docs_from_vector_store(vector_store)
+        if manifest_entries:
+            _save_manifest(manifest_entries)
     return {"ok": True, "chunks": len(chunks), "index_dir": INDEX_DIR, "emb_dim": EXPECTED_DIM}
 
 def _ensure_vs_ready() -> Optional[Dict[str, Any]]:

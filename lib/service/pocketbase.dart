@@ -21,7 +21,7 @@ Future<PocketBase> getPocketbaseInstance() async {
   );
 
   // Đọc URL từ .env hoặc fallback về localhost
-  final baseUrl = dotenv.env['POCKETBASE_URL'] ?? 'http://127.0.0.1:8090';
+  final baseUrl = dotenv.env['POCKETBASE_URL'] ?? 'http://10.0.2.2:8090';
 
   // Khởi tạo PocketBase với authStore
   _pocketbase = PocketBase(baseUrl, authStore: store);

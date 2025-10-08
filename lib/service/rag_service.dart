@@ -29,8 +29,8 @@ class RagApiService {
   String get _baseUrl {
     final raw = dotenv.env['RAG_API_URL'] ??
         dotenv.env['RAG_API_BASE_URL'] ??
-        'http://127.0.0.1:8000';
-    return raw.trim().isEmpty ? 'http://127.0.0.1:8000' : raw.trim();
+        'http://10.0.2.2:8011';
+    return raw.trim().isEmpty ? 'http://10.0.2.2:8011' : raw.trim();
   }
 
   Uri _uri(String path, [Map<String, dynamic>? query]) {
@@ -75,9 +75,8 @@ class RagApiService {
         contentType: MediaType.parse(mimeType),
       ));
 
-    final streamed = await request
-        .send()
-        .timeout(_timeout, onTimeout: () => _onTimeout<http.StreamedResponse>());
+    final streamed = await request.send().timeout(_timeout,
+        onTimeout: () => _onTimeout<http.StreamedResponse>());
 
     final body = await streamed.stream.bytesToString();
     final statusCode = streamed.statusCode;
@@ -175,6 +174,7 @@ class RagApiService {
   }
 
   FutureOr<T> _onTimeout<T>() {
-    throw RagApiException('Yêu cầu vượt quá thời gian chờ. Kiểm tra lại server.');
+    throw RagApiException(
+        'Yêu cầu vượt quá thời gian chờ. Kiểm tra lại server.');
   }
 }

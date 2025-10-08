@@ -1,0 +1,13 @@
+# Demo tài liệu RAG
+
+Tài liệu được sinh tự động lúc 2025-10-08T14:48:59.352099 để kiểm tra pipeline tải lên.
+
+Bạn có thể thay thế bằng nội dung thật bằng cách chỉnh sửa hàm _handleDemoUpload.
+
+Hướng dẫn:
+
+- Bước 1: Chạy server FastAPI trong thư mục RAG_demo.
+
+- Bước 2: Nhấn nút "Chọn tài liệu từ máy" để upload file mẫu.
+
+- Bước 3: Chọn tài liệu và bắt đầu trò chuyện.

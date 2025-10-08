@@ -1,0 +1,40 @@
+{
+  "documents": [
+    {
+      "id": "2bda9ff2-124c-531d-9e9f-112f6de297af",
+      "name": "demo_rag_notes.txt",
+      "source": "demo_rag_notes.txt",
+      "chunk_count": 1,
+      "approx_tokens": 87,
+      "quality_tiers": {
+        "high": 1
+      },
+      "size_bytes": 463,
+      "uploaded_at": "2025-10-08T07:49:02.594797"
+    },
+    {
+      "id": "23c35b8d-abdf-595c-94c9-0fe8cbf5e33a",
+      "name": "I Built RAG Systems for Enterprises (20K+ Docs). Here’s the learning path I wish I had (complete guide).pdf",
+      "source": "I Built RAG Systems for Enterprises (20K+ Docs). Here’s the learning path I wish I had (complete guide).pdf",
+      "chunk_count": 24,
+      "approx_tokens": 3204,
+      "quality_tiers": {
+        "high": 24
+      },
+      "size_bytes": 223069,
+      "uploaded_at": "2025-10-07T11:20:33.867359"
+    },
+    {
+      "id": "e816d102-c859-52a4-a045-38d05d4daa3a",
+      "name": "4.pdf",
+      "source": "4.pdf",
+      "chunk_count": 1,
+      "approx_tokens": 43,
+      "quality_tiers": {
+        "medium": 1
+      },
+      "size_bytes": 971369,
+      "uploaded_at": "2025-10-07T11:00:47.728077"
+    }
+  ]
+}

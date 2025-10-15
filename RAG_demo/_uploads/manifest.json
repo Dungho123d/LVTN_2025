@@ -1,6 +1,162 @@
 {
   "documents": [
     {
+      "id": "383c264e-4908-5bf3-99fa-5d6c36816df1",
+      "name": "Slide ML 1.pdf",
+      "source": "Slide ML 1.pdf",
+      "chunk_count": 13,
+      "approx_tokens": 2814,
+      "quality_tiers": {
+        "high": 13
+      },
+      "size_bytes": 1209374,
+      "uploaded_at": "2025-10-14T14:55:27.155186"
+    },
+    {
+      "id": "97071169-1a86-54cd-b5a8-c6db4dfb223e",
+      "name": "B2111919_FOSS_Development_Lab01_2024.pdf",
+      "source": "B2111919_FOSS_Development_Lab01_2024.pdf",
+      "chunk_count": 34,
+      "approx_tokens": 4211,
+      "quality_tiers": {
+        "high": 34
+      },
+      "size_bytes": 491568,
+      "uploaded_at": "2025-10-14T14:36:15.843690"
+    },
+    {
+      "id": "4e82d02a-d64d-556e-bd3a-677ee93ad3ef",
+      "name": "Building RAG systems at enterprise scale (20K+ docs) lessons from 10+ enterprise implementations.pdf",
+      "source": "Building RAG systems at enterprise scale (20K+ docs) lessons from 10+ enterprise implementations.pdf",
+      "chunk_count": 84,
+      "approx_tokens": 13233,
+      "quality_tiers": {
+        "high": 84
+      },
+      "size_bytes": 312259,
+      "uploaded_at": "2025-10-10T05:17:42.425955"
+    },
+    {
+      "id": "e58c1d43-8550-57f3-a6b0-f9569c095e0d",
+      "name": "B2111919-HoDucDung-LAB08.docx",
+      "source": "B2111919-HoDucDung-LAB08.docx",
+      "chunk_count": 7,
+      "approx_tokens": 1164,
+      "quality_tiers": {
+        "high": 7
+      },
+      "size_bytes": 402631,
+      "uploaded_at": "2025-10-10T05:14:02.579790"
+    },
+    {
+      "id": "38c534e2-26ba-5327-93cc-353b6fe94a7e",
+      "name": "2503-31-LAB10-coding process for visualization iot security Program.docx",
+      "source": "2503-31-LAB10-coding process for visualization iot security Program.docx",
+      "chunk_count": 10,
+      "approx_tokens": 1357,
+      "quality_tiers": {
+        "high": 10
+      },
+      "size_bytes": 266489,
+      "uploaded_at": "2025-10-09T09:51:14.027800"
+    },
+    {
+      "id": "0fb9b627-d5ae-5ff6-9482-7c6a8af226f8",
+      "name": "Lab 2 - B2111919-HoDucDung.docx",
+      "source": "Lab 2 - B2111919-HoDucDung.docx",
+      "chunk_count": 20,
+      "approx_tokens": 2833,
+      "quality_tiers": {
+        "high": 20
+      },
+      "size_bytes": 408060,
+      "uploaded_at": "2025-10-09T09:44:52.548997"
+    },
+    {
+      "id": "64d1e869-7dc4-5386-837a-a05188fd3e79",
+      "name": "code đa thức.txt",
+      "source": "code đa thức.txt",
+      "chunk_count": 13,
+      "approx_tokens": 2287,
+      "quality_tiers": {
+        "high": 13
+      },
+      "size_bytes": 9013,
+      "uploaded_at": "2025-10-08T10:30:08.119265"
+    },
+    {
+      "id": "bf860195-e14d-57d5-b684-53288a136017",
+      "name": "B2111919-LAB08 code iot sw installation .docx",
+      "source": "B2111919-LAB08 code iot sw installation .docx",
+      "chunk_count": 10,
+      "approx_tokens": 518,
+      "quality_tiers": {
+        "high": 10
+      },
+      "size_bytes": 312717,
+      "uploaded_at": "2025-10-08T09:20:15.827138"
+    },
+    {
+      "id": "668b0639-e54a-59a4-aff1-f882909e4906",
+      "name": "B2111919 - Lab2.docx",
+      "source": "B2111919 - Lab2.docx",
+      "chunk_count": 2,
+      "approx_tokens": 326,
+      "quality_tiers": {
+        "high": 2
+      },
+      "size_bytes": 121712,
+      "uploaded_at": "2025-10-08T08:59:30.389694"
+    },
+    {
+      "id": "b6223045-e17d-5478-b8e8-c46bf7d587b8",
+      "name": "B2105684_LeAnhQuan_Lab07.docx",
+      "source": "B2105684_LeAnhQuan_Lab07.docx",
+      "chunk_count": 6,
+      "approx_tokens": 964,
+      "quality_tiers": {
+        "high": 6
+      },
+      "size_bytes": 1095538,
+      "uploaded_at": "2025-10-08T08:56:50.755875"
+    },
+    {
+      "id": "87d85428-191a-5aa3-b460-dee650909db9",
+      "name": "Bản sao của Bản sao của 2409-15-LAB05-Coding TensorFlow applications.docx",
+      "source": "Bản sao của Bản sao của 2409-15-LAB05-Coding TensorFlow applications.docx",
+      "chunk_count": 2,
+      "approx_tokens": 443,
+      "quality_tiers": {
+        "high": 2
+      },
+      "size_bytes": 12146,
+      "uploaded_at": "2025-10-08T08:46:55.731613"
+    },
+    {
+      "id": "00533293-b16a-5e43-bf8c-272f71125fac",
+      "name": "2408-09-LAB02-PS-PoD simulation exercise.docx",
+      "source": "2408-09-LAB02-PS-PoD simulation exercise.docx",
+      "chunk_count": 3,
+      "approx_tokens": 471,
+      "quality_tiers": {
+        "high": 3
+      },
+      "size_bytes": 319402,
+      "uploaded_at": "2025-10-08T08:46:19.515781"
+    },
+    {
+      "id": "8dc70d1a-7701-51e7-b9e5-0d87824e5350",
+      "name": "1. MOTA_NLCN_B2111919.docx",
+      "source": "1. MOTA_NLCN_B2111919.docx",
+      "chunk_count": 4,
+      "approx_tokens": 570,
+      "quality_tiers": {
+        "high": 4
+      },
+      "size_bytes": 17443,
+      "uploaded_at": "2025-10-08T08:38:19.235553"
+    },
+    {
       "id": "2bda9ff2-124c-531d-9e9f-112f6de297af",
       "name": "demo_rag_notes.txt",
       "source": "demo_rag_notes.txt",
@@ -10,7 +166,7 @@
         "high": 1
       },
       "size_bytes": 463,
-      "uploaded_at": "2025-10-08T07:49:02.594797"
+      "uploaded_at": "2025-10-08T08:00:24.840789"
     },
     {
       "id": "23c35b8d-abdf-595c-94c9-0fe8cbf5e33a",

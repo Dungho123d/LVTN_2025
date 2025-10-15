@@ -1,9 +1,13 @@
+// rag_service.dart
+
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+
+import 'package:pocketbase/pocketbase.dart';
 
 import '../models/rag_chat.dart';
 import '../models/rag_document.dart';
@@ -18,13 +22,91 @@ class RagApiException implements Exception {
   String toString() => message;
 }
 
+// >>> NEW: Logger ghi chat vào PocketBase theo schema chat_sessions/chat_messages
+class PbChatLogger {
+  final PocketBase pb;
+  PbChatLogger(this.pb);
+
+  Future<String> ensureSession({
+    required String title,
+    required List<String> documentIds,
+  }) async {
+    final userId = pb.authStore.record?.id;
+    if (userId == null || userId.isEmpty) {
+      throw Exception('Chưa đăng nhập PB');
+    }
+    final rec = await pb.collection('chat_sessions').create(body: {
+      'user': userId,
+      'title': title,
+      'documents': documentIds,
+      'created_at': DateTime.now().toIso8601String(),
+      'last_message_at': DateTime.now().toIso8601String(),
+    });
+    return rec.id;
+  }
+
+  Future<void> addMessage({
+    required String sessionId,
+    required String role, // "user" | "assistant" | "system"
+    required String content,
+    Map<String, dynamic>? ctx,
+    int? k,
+    int? latencyMs,
+    String? interactionId,
+    num? feedback,
+    String? feedbackComment,
+  }) async {
+    await pb.collection('chat_messages').create(body: {
+      'session': sessionId,
+      'role': role,
+      'content': content,
+      if (ctx != null) 'ctx': ctx,
+      if (k != null) 'k': k,
+      if (latencyMs != null) 'latency_ms': latencyMs,
+      if (interactionId != null) 'interaction_id': interactionId,
+      if (feedback != null) 'feedback': feedback,
+      if (feedbackComment != null) 'feedback_comment': feedbackComment,
+    });
+
+    await pb.collection('chat_sessions').update(sessionId, body: {
+      'last_message_at': DateTime.now().toIso8601String(),
+    });
+  }
+}
+
+// Tuỳ chọn truyền vào khi gọi chat() để auto log sang PocketBase
+class PbLogOptions {
+  final PocketBase pb;
+  String? sessionId; // có thể để null để auto tạo
+  final String? sessionTitle;
+  final List<String>
+      documentIds; // id bản ghi trong PB (collection `documents`)
+  final bool ensureSession; // true -> auto tạo session nếu chưa có
+  final void Function(String sessionId)? onSessionCreated;
+
+  PbLogOptions({
+    required this.pb,
+    this.sessionId,
+    this.sessionTitle,
+    this.documentIds = const [],
+    this.ensureSession = true,
+    this.onSessionCreated,
+  });
+}
+// <<< NEW
+
 class RagApiService {
   RagApiService._internal();
 
   static final RagApiService instance = RagApiService._internal();
 
   final http.Client _client = http.Client();
-  final Duration _timeout = const Duration(seconds: 30);
+  int get _timeoutSec {
+    final raw = dotenv.env['RAG_HTTP_TIMEOUT_SEC'];
+    return int.tryParse(raw ?? '') ?? 180;
+  }
+
+  Duration get _timeout => Duration(seconds: _timeoutSec);
 
   String get _baseUrl {
     final raw = dotenv.env['RAG_API_URL'] ??
@@ -66,19 +148,31 @@ class RagApiService {
     required String filename,
     required List<int> bytes,
     String mimeType = 'text/plain',
+    int? sizeBytes,
+    String? pbDocumentId, // NEW: truyền kèm id record PB nếu đã có
   }) async {
-    final request = http.MultipartRequest('POST', _uri('/ingest_file'))
-      ..files.add(http.MultipartFile.fromBytes(
-        'file',
-        bytes,
-        filename: filename,
-        contentType: MediaType.parse(mimeType),
-      ));
+    final req = http.MultipartRequest(
+      'POST',
+      _uri('/ingest_file', {
+        if (pbDocumentId != null) 'pb_document_id': pbDocumentId,
+      }),
+    );
 
-    final streamed = await request.send().timeout(_timeout,
-        onTimeout: () => _onTimeout<http.StreamedResponse>());
+    req.files.add(http.MultipartFile.fromBytes(
+      'file',
+      bytes,
+      filename: filename,
+      contentType: MediaType.parse(mimeType),
+    ));
 
-    final body = await streamed.stream.bytesToString();
+    final streamed = await req.send().timeout(
+          _timeout,
+          onTimeout: () => _onTimeout<http.StreamedResponse>(),
+        );
+
+    final body = await streamed.stream
+        .bytesToString()
+        .timeout(_timeout, onTimeout: _onTimeout<String>);
     final statusCode = streamed.statusCode;
     if (statusCode >= 400) {
       throw RagApiException(
@@ -94,6 +188,7 @@ class RagApiService {
         statusCode: statusCode,
       );
     }
+
     final documentJson = decoded['document'];
     if (documentJson is Map<String, dynamic>) {
       return RagDocument.fromJson(documentJson);
@@ -109,6 +204,7 @@ class RagApiService {
       name: decoded['file'] as String? ?? filename,
       chunkCount: (decoded['added_chunks'] as num?)?.toInt() ?? 0,
       uploadedAt: DateTime.now(),
+      sizeBytes: sizeBytes ?? bytes.length,
     );
   }
 
@@ -117,7 +213,41 @@ class RagApiService {
     required RagDocument document,
     int k = 4,
     String minQualityTier = 'medium',
+
+    // >>> NEW: tuỳ chọn log sang PocketBase
+    PbLogOptions? pbLog,
+    // <<< NEW
   }) async {
+    // >>> NEW: log user message trước khi gọi RAG (nếu cấu hình)
+    final sw = Stopwatch()..start();
+    if (pbLog != null) {
+      try {
+        final logger = PbChatLogger(pbLog.pb);
+
+        if (pbLog.ensureSession &&
+            (pbLog.sessionId == null || pbLog.sessionId!.isEmpty)) {
+          final title = pbLog.sessionTitle ?? 'Chat: ${document.name}';
+          final sid = await logger.ensureSession(
+            title: title,
+            documentIds: pbLog.documentIds,
+          );
+          pbLog.sessionId = sid;
+          pbLog.onSessionCreated?.call(sid);
+        }
+
+        if (pbLog.sessionId != null) {
+          await logger.addMessage(
+            sessionId: pbLog.sessionId!,
+            role: 'user',
+            content: query,
+          );
+        }
+      } catch (e) {
+        // Không để log PB làm hỏng phiên chat
+      }
+    }
+    // <<< NEW
+
     final response = await _client
         .post(
           _uri('/chat'),
@@ -132,7 +262,29 @@ class RagApiService {
         .timeout(_timeout, onTimeout: _onTimeout);
 
     final data = _decodeJson(response);
-    return RagChatResponse.fromJson(data);
+    final ragResp = RagChatResponse.fromJson(data);
+
+    // >>> NEW: log assistant message sau khi có kết quả
+    sw.stop();
+    if (pbLog?.sessionId != null) {
+      try {
+        final logger = PbChatLogger(pbLog!.pb);
+        await logger.addMessage(
+          sessionId: pbLog.sessionId!,
+          role: 'assistant',
+          content: ragResp.answer, // field trong RagChatResponse
+          // Nếu có metadata nguồn/chunks trong ragResp, có thể nhét vào ctx:
+          // ctx: ragResp.ctx,
+          k: k,
+          latencyMs: sw.elapsedMilliseconds,
+        );
+      } catch (_) {
+        // nuốt lỗi logging
+      }
+    }
+    // <<< NEW
+
+    return ragResp;
   }
 
   Map<String, dynamic> _decodeJson(http.Response response) {
@@ -175,6 +327,7 @@ class RagApiService {
 
   FutureOr<T> _onTimeout<T>() {
     throw RagApiException(
-        'Yêu cầu vượt quá thời gian chờ. Kiểm tra lại server.');
+      'Yêu cầu vượt quá thời gian chờ. Kiểm tra lại server.',
+    );
   }
 }

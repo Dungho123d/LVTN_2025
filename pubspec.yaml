@@ -44,6 +44,8 @@ dependencies:
   pocketbase: ^0.22.0
   url_launcher: ^6.3.0
   http: ^1.2.2
+  file_picker: ^10.3.3
+  provider: ^6.1.5+1
 
 dev_dependencies:
   flutter_test:

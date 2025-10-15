@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:pocketbase/pocketbase.dart';
 
+import 'package:study_application/service/pocketbase.dart';
 import '../../models/rag_chat.dart';
 import '../../models/rag_document.dart';
 import '../../service/rag_service.dart';
@@ -21,6 +24,9 @@ class _RagChatPageState extends State<RagChatPage> {
 
   bool _isSending = false;
 
+  String? _pbSessionId;
+  String? _pbDocumentId;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -40,9 +46,25 @@ class _RagChatPageState extends State<RagChatPage> {
     _scrollToBottom();
 
     try {
+      // Chuẩn bị log sang PocketBase
+      final pb = await getPocketbaseInstance();
+      _pbDocumentId ??= await _resolvePocketBaseDocumentId(pb);
+
+      final pbLog = PbLogOptions(
+        pb: pb,
+        sessionId: _pbSessionId, // null -> auto tạo
+        sessionTitle: 'Chat: ${widget.document.name}',
+        documentIds: [
+          if (_pbDocumentId != null) _pbDocumentId!,
+        ],
+        ensureSession: true,
+        onSessionCreated: (sid) => _pbSessionId = sid,
+      );
+
       final response = await _service.chat(
         query: text,
         document: widget.document,
+        pbLog: pbLog, // truyền tuỳ chọn log
       );
 
       if (!mounted) return;
@@ -72,6 +94,33 @@ class _RagChatPageState extends State<RagChatPage> {
       _scrollToBottom();
     }
   }
+
+  // Tìm record documents trong PB theo owner + title
+  Future<String?> _resolvePocketBaseDocumentId(PocketBase pb) async {
+    try {
+      final ownerId = pb.authStore.record?.id;
+      if (ownerId == null || ownerId.isEmpty) return null;
+
+      final title = widget.document.name;
+      final esc = _escapeFilterValue(title);
+
+      final list = await pb.collection('documents').getList(
+            page: 1,
+            perPage: 1,
+            filter: 'owner.id = "$ownerId" && title = "$esc"',
+            sort: '-created',
+          );
+
+      if (list.items.isNotEmpty) {
+        return list.items.first.id;
+      }
+    } catch (_) {
+      // nuốt lỗi, không làm hỏng phiên chat
+    }
+    return null;
+  }
+
+  String _escapeFilterValue(String v) => v.replaceAll(r'"', r'\"');
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -205,6 +254,8 @@ class _RagChatPageState extends State<RagChatPage> {
   }
 }
 
+/* ====================== UI dưới đây: ĐẸP HƠN & ẨN CHUNK_LEVEL/LOẠI ====================== */
+
 class _MessageBubble extends StatelessWidget {
   final RagMessage message;
 
@@ -216,55 +267,237 @@ class _MessageBubble extends StatelessWidget {
     final isUser = message.isUser;
     final isError = message.isError;
 
-    final alignment = isUser ? Alignment.centerRight : Alignment.centerLeft;
-    final bgColor = isError
-        ? const Color(0xFFFFE4E6)
-        : isUser
-            ? theme.colorScheme.primary
-            : Colors.white;
-    final textColor = isUser ? Colors.white : Colors.black87;
+    if (isUser) {
+      // Bubble người dùng
+      return Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: SelectableText(
+            message.text,
+            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
+          ),
+        ),
+      );
+    }
 
+    // Assistant / Error
     return Align(
-      alignment: alignment,
+      alignment: Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: bgColor,
+          color: isError ? const Color(0xFFFFF1F2) : Colors.white,
           borderRadius: BorderRadius.circular(18),
-          boxShadow: isUser
-              ? null
-              : const [
-                  BoxShadow(
-                    color: Color.fromRGBO(15, 23, 42, 0.08),
-                    blurRadius: 16,
-                    offset: Offset(0, 8),
-                  ),
-                ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SelectableText(
-              message.text,
-              style: theme.textTheme.bodyMedium?.copyWith(color: textColor),
+          border: Border.all(
+            color: isError ? const Color(0xFFFECACA) : const Color(0xFFE5E7EB),
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color.fromRGBO(15, 23, 42, 0.06),
+              blurRadius: 14,
+              offset: Offset(0, 8),
             ),
-            if (message.isAssistant && message.contexts.isNotEmpty) ...[
-              const SizedBox(height: 12),
+          ],
+        ),
+        child: isError
+            ? _AssistantError(text: message.text)
+            : _AssistantMessageContent(message: message),
+      ),
+    );
+  }
+}
+
+class _AssistantError extends StatelessWidget {
+  final String text;
+  const _AssistantError({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.error_outline, color: Color(0xFFEF4444)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: SelectableText(
+            text,
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(color: const Color(0xFF991B1B)),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AssistantMessageContent extends StatelessWidget {
+  final RagMessage message;
+  const _AssistantMessageContent({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header nhỏ
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2563EB).withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.smart_toy_outlined,
+                  color: Color(0xFF2563EB), size: 18),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Trợ lý',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1F2937),
+              ),
+            ),
+            const Spacer(),
+            IconButton(
+              tooltip: 'Sao chép trả lời',
+              icon: const Icon(Icons.copy_all_rounded, size: 18),
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: message.text));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Đã sao chép nội dung trả lời')),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        // Nội dung trả lời – format nhẹ
+        _AnswerRichText(text: message.text),
+
+        if (message.contexts.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          _SourcesSection(contexts: message.contexts),
+        ],
+      ],
+    );
+  }
+}
+
+class _AnswerRichText extends StatelessWidget {
+  final String text;
+  const _AnswerRichText({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Tách đoạn theo dòng trống
+    final paragraphs = text.split(RegExp(r'\n\s*\n'));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final p in paragraphs) ...[
+          _renderParagraph(p.trim(), theme),
+          const SizedBox(height: 8),
+        ],
+      ],
+    );
+  }
+
+  Widget _renderParagraph(String p, ThemeData theme) {
+    // Nếu là danh sách gạch đầu dòng, render lại đẹp hơn
+    final lines = p.split('\n');
+    final isBulleted = lines.every(
+        (l) => l.trimLeft().startsWith('-') || l.trimLeft().startsWith('•'));
+    if (isBulleted) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final l in lines)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 6),
+                  child: Icon(Icons.circle, size: 6, color: Color(0xFF6B7280)),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SelectableText(
+                    l.replaceFirst(RegExp(r'^[-•]\s*'), ''),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
+        ],
+      );
+    }
+
+    // Đoạn văn thường
+    return SelectableText(
+      p,
+      style: theme.textTheme.bodyMedium?.copyWith(height: 1.3),
+    );
+  }
+}
+
+class _SourcesSection extends StatelessWidget {
+  final List<RagContextSnippet> contexts;
+  const _SourcesSection({required this.contexts});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+          initiallyExpanded: false,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          collapsedShape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Row(
+            children: [
+              const Icon(Icons.library_books_outlined,
+                  size: 18, color: Color(0xFF334155)),
+              const SizedBox(width: 8),
               Text(
-                'Nguồn tham khảo',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w600,
+                'Nguồn tham khảo (${contexts.length})',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF334155),
                 ),
               ),
-              const SizedBox(height: 8),
-              Column(
-                children: message.contexts
-                    .map((ctx) => _ContextCard(contextSnippet: ctx))
-                    .toList(),
-              ),
             ],
+          ),
+          children: [
+            const SizedBox(height: 6),
+            ...contexts.map((c) => _SourceCard(contextSnippet: c)),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -272,49 +505,69 @@ class _MessageBubble extends StatelessWidget {
   }
 }
 
-class _ContextCard extends StatelessWidget {
+class _SourceCard extends StatelessWidget {
   final RagContextSnippet contextSnippet;
-
-  const _ContextCard({required this.contextSnippet});
+  const _SourceCard({required this.contextSnippet});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final metadata = contextSnippet.metadata;
-    final quality = metadata['quality_tier'];
+    final meta = contextSnippet.metadata;
+    final quality = meta[
+        'quality_tier']; // chỉ còn quality, KHÔNG hiển thị chunk_level/loại
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            contextSnippet.displayTitle,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+          // Tiêu đề hiển thị
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.description_outlined,
+                  size: 18, color: Color(0xFF475569)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  contextSnippet.displayTitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111827),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 6),
+
+          // Trích đoạn
           Text(
             contextSnippet.content,
-            style: theme.textTheme.bodySmall,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: const Color(0xFF374151), height: 1.25),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
+
+          // Chips metadata: CHỈ hiện source & quality
           Wrap(
             spacing: 8,
-            runSpacing: 4,
+            runSpacing: 6,
             children: [
-              _MetaChip(label: contextSnippet.source),
+              _ChipPill(label: contextSnippet.source),
               if (quality is String && quality.isNotEmpty)
-                _MetaChip(label: 'Chất lượng: $quality'),
-              if (metadata['chunk_level'] is String)
-                _MetaChip(label: 'Loại: ${metadata['chunk_level']}'),
+                _ChipPill(label: 'Chất lượng: $quality'),
             ],
           ),
         ],
@@ -323,23 +576,24 @@ class _ContextCard extends StatelessWidget {
   }
 }
 
-class _MetaChip extends StatelessWidget {
+class _ChipPill extends StatelessWidget {
   final String label;
-
-  const _MetaChip({required this.label});
+  const _ChipPill({required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFE5E7EB),
+        color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: const Color(0xFF374151),
+              color: const Color(0xFF334155),
+              fontWeight: FontWeight.w600,
             ),
       ),
     );

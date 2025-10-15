@@ -1,0 +1,157 @@
+{
+  "deleteMissing": false,
+  "collections": [
+    {
+      "id": "_pb_users_auth_",
+      "name": "users",
+      "type": "auth",
+      "system": false,
+      "schema": [
+        { "name": "name", "type": "text", "required": true, "presentable": true, "options": {} },
+        { "name": "avatar", "type": "file", "required": false, "options": { "maxSelect": 1 } },
+        { "name": "role", "type": "select", "required": false, "options": { "values": ["student","admin"] } }
+      ],
+      "indexes": [],
+      "listRule": "@request.auth.role = 'admin'",
+      "viewRule": "@request.auth.id = id || @request.auth.role = 'admin'",
+      "createRule": "",
+      "updateRule": "@request.auth.id = id || @request.auth.role = 'admin'",
+      "deleteRule": "@request.auth.role = 'admin'",
+      "options": {
+        "allowEmailAuth": true,
+        "allowOAuth2Auth": true,
+        "allowUsernameAuth": false,
+        "requireEmail": true,
+        "minPasswordLength": 6,
+        "onlyVerified": false,
+        "requireUsername": false
+      }
+    },
+    {
+      "id": "docs0z2p1q8x7y3",
+      "name": "documents",
+      "type": "base",
+      "system": false,
+      "schema": [
+        { "name": "title", "type": "text", "required": false, "options": {} },
+        { "name": "file", "type": "file", "required": false, "options": { "maxSelect": 1, "maxSize": 15728640 } },
+        { "name": "owner", "type": "relation", "required": true, "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": false, "maxSelect": 1, "displayFields": [] } },
+        { "name": "status", "type": "select", "required": false, "options": { "values": ["pending","ingested","error"] } },
+        { "name": "chunk_count", "type": "number", "required": false, "options": {} },
+        { "name": "emb_model", "type": "text", "required": false, "options": {} },
+        { "name": "ingested_at", "type": "date", "required": false, "options": {} }
+      ],
+      "indexes": [],
+      "listRule": "owner.id = @request.auth.id",
+      "viewRule": "owner.id = @request.auth.id",
+      "createRule": "@request.auth.id != ''",
+      "updateRule": "owner.id = @request.auth.id",
+      "deleteRule": "owner.id = @request.auth.id",
+      "options": {}
+    },
+    {
+      "id": "dchk0z2p1q8x7y3",
+      "name": "doc_chunks",
+      "type": "base",
+      "system": false,
+      "schema": [
+        { "name": "document", "type": "relation", "required": true, "options": { "collectionId": "docs0z2p1q8x7y3", "cascadeDelete": true, "maxSelect": 1, "displayFields": [] } },
+        { "name": "chunk_id", "type": "text", "required": false, "options": {} },
+        { "name": "section_title", "type": "text", "required": false, "options": {} },
+        { "name": "quality_tier", "type": "select", "required": false, "options": { "values": ["low","medium","high"] } },
+        { "name": "source", "type": "text", "required": false, "options": {} },
+        { "name": "snippet", "type": "text", "required": false, "options": {} }
+      ],
+      "indexes": [],
+      "listRule": "document.owner.id = @request.auth.id",
+      "viewRule": "document.owner.id = @request.auth.id",
+      "createRule": "document.owner.id = @request.auth.id",
+      "updateRule": "document.owner.id = @request.auth.id",
+      "deleteRule": "document.owner.id = @request.auth.id",
+      "options": {}
+    },
+    {
+      "id": "cses0z2p1q8x7y3",
+      "name": "chat_sessions",
+      "type": "base",
+      "system": false,
+      "schema": [
+        { "name": "user", "type": "relation", "required": true, "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": false, "maxSelect": 1, "displayFields": [] } },
+        { "name": "title", "type": "text", "required": false, "options": {} },
+        { "name": "documents", "type": "relation", "required": false, "options": { "collectionId": "docs0z2p1q8x7y3", "cascadeDelete": false, "maxSelect": 999, "displayFields": [] } },
+        { "name": "created_at", "type": "date", "required": false, "options": {} },
+        { "name": "last_message_at", "type": "date", "required": false, "options": {} }
+      ],
+      "indexes": [],
+      "listRule": "user.id = @request.auth.id",
+      "viewRule": "user.id = @request.auth.id",
+      "createRule": "user.id = @request.auth.id",
+      "updateRule": "user.id = @request.auth.id",
+      "deleteRule": "user.id = @request.auth.id",
+      "options": {}
+    },
+    {
+      "id": "cmsg0z2p1q8x7y3",
+      "name": "chat_messages",
+      "type": "base",
+      "system": false,
+      "schema": [
+        { "name": "session", "type": "relation", "required": true, "options": { "collectionId": "cses0z2p1q8x7y3", "cascadeDelete": true, "maxSelect": 1, "displayFields": [] } },
+        { "name": "role", "type": "select", "required": true, "options": { "values": ["user","assistant","system"] } },
+        { "name": "content", "type": "text", "required": true, "options": {} },
+        { "name": "ctx", "type": "json", "required": false, "options": {} },
+        { "name": "k", "type": "number", "required": false, "options": {} },
+        { "name": "latency_ms", "type": "number", "required": false, "options": {} },
+        { "name": "interaction_id", "type": "text", "required": false, "options": {} },
+        { "name": "feedback", "type": "number", "required": false, "options": {} },
+        { "name": "feedback_comment", "type": "text", "required": false, "options": {} }
+      ],
+      "indexes": [],
+      "listRule": "session.user.id = @request.auth.id",
+      "viewRule": "session.user.id = @request.auth.id",
+      "createRule": "session.user.id = @request.auth.id",
+      "updateRule": "session.user.id = @request.auth.id",
+      "deleteRule": "session.user.id = @request.auth.id",
+      "options": {}
+    },
+    {
+      "id": "evalc0z2p1q8x7y3",
+      "name": "eval_cases",
+      "type": "base",
+      "system": false,
+      "schema": [
+        { "name": "query", "type": "text", "required": true, "options": {} },
+        { "name": "gold_chunk_ids", "type": "json", "required": false, "options": {} },
+        { "name": "documents", "type": "relation", "required": false, "options": { "collectionId": "docs0z2p1q8x7y3", "cascadeDelete": false, "maxSelect": 999, "displayFields": [] } },
+        { "name": "owner", "type": "relation", "required": true, "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": false, "maxSelect": 1, "displayFields": [] } }
+      ],
+      "indexes": [],
+      "listRule": "owner.id = @request.auth.id",
+      "viewRule": "owner.id = @request.auth.id",
+      "createRule": "owner.id = @request.auth.id",
+      "updateRule": "owner.id = @request.auth.id",
+      "deleteRule": "owner.id = @request.auth.id",
+      "options": {}
+    },
+    {
+      "id": "evalr0z2p1q8x7y3",
+      "name": "eval_runs",
+      "type": "base",
+      "system": false,
+      "schema": [
+        { "name": "k", "type": "number", "required": false, "options": {} },
+        { "name": "summary", "type": "json", "required": false, "options": {} },
+        { "name": "output_csv", "type": "file", "required": false, "options": { "maxSelect": 1 } },
+        { "name": "run_at", "type": "date", "required": false, "options": {} },
+        { "name": "owner", "type": "relation", "required": true, "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": false, "maxSelect": 1, "displayFields": [] } }
+      ],
+      "indexes": [],
+      "listRule": "owner.id = @request.auth.id",
+      "viewRule": "owner.id = @request.auth.id",
+      "createRule": "owner.id = @request.auth.id",
+      "updateRule": "owner.id = @request.auth.id",
+      "deleteRule": "owner.id = @request.auth.id",
+      "options": {}
+    }
+  ]
+}

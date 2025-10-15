@@ -1,10 +1,16 @@
-import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:study_application/service/pb_sync_service.dart';
 import '../../models/rag_document.dart';
 import '../../service/rag_service.dart';
+import '../../service/pocketbase.dart';
 
 Future<RagDocument?> showRagDocumentSheet(BuildContext context) {
   return showModalBottomSheet<RagDocument?>(
@@ -214,7 +220,8 @@ class _RagDocumentSheetState extends State<_RagDocumentSheet>
                   ),
                   const SizedBox(height: 24),
                   FilledButton.icon(
-                    onPressed: _isUploading ? null : _handleDemoUpload,
+                    onPressed:
+                        _isUploading ? null : () => _handleUploadFromDevice(),
                     icon: _isUploading
                         ? const SizedBox(
                             height: 18,
@@ -227,7 +234,11 @@ class _RagDocumentSheetState extends State<_RagDocumentSheet>
                             ),
                           )
                         : const Icon(Icons.file_upload_outlined),
-                    label: Text(_isUploading ? 'Đang tải lên...' : 'Chọn tài liệu từ máy'),
+                    label: Text(
+                      _isUploading
+                          ? 'Đang tải lên...'
+                          : 'Chọn tài liệu từ thiết bị',
+                    ),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -393,28 +404,61 @@ class _RagDocumentSheetState extends State<_RagDocumentSheet>
     );
   }
 
-  Future<void> _handleDemoUpload() async {
-    setState(() {
-      _isUploading = true;
-    });
-
+  Future<void> _handleUploadFromDevice() async {
     try {
-      final now = DateTime.now();
-      final sampleText = [
-        '# Demo tài liệu RAG',
-        'Tài liệu được sinh tự động lúc ${now.toIso8601String()} để kiểm tra pipeline tải lên.',
-        'Bạn có thể thay thế bằng nội dung thật bằng cách chỉnh sửa hàm _handleDemoUpload.',
-        'Hướng dẫn:',
-        '- Bước 1: Chạy server FastAPI trong thư mục RAG_demo.',
-        '- Bước 2: Nhấn nút "Chọn tài liệu từ máy" để upload file mẫu.',
-        '- Bước 3: Chọn tài liệu và bắt đầu trò chuyện.',
-      ].join('\n\n');
-
-      final uploaded = await _ragService.uploadDocumentBytes(
-        filename: 'demo_rag_notes.txt',
-        bytes: utf8.encode(sampleText),
-        mimeType: 'text/plain',
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: false,
+        type: FileType.custom,
+        allowedExtensions: const ['pdf', 'doc', 'docx', 'txt', 'md'],
+        withData: true,
       );
+      if (result == null || result.files.isEmpty) return;
+
+      final file = result.files.single;
+
+      const maxSizeBytes = 15 * 1024 * 1024; // 15MB
+      if (file.size > maxSizeBytes) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('File vượt quá giới hạn 15MB.')),
+        );
+        return;
+      }
+
+      final bytes = await _resolveFileBytes(file);
+      if (bytes == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Không đọc được nội dung file "${file.name}"')),
+        );
+        return;
+      }
+
+      final mimeType = _resolveMimeType(file.name);
+
+      if (!mounted) return;
+      setState(() => _isUploading = true);
+
+      // ==== DÙNG SERVICE ĐỒNG BỘ PB + RAG ====
+      RagDocument uploaded;
+      try {
+        final pb =
+            await getPocketbaseInstance(); // bạn đã import ../../service/pocketbase.dart
+        final sync = PbSyncService(pb: pb, ragService: _ragService);
+
+        uploaded = await sync.uploadAndSync(
+          filename: file.name,
+          bytes: bytes,
+          mimeType: mimeType,
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Tải lên/đồng bộ thất bại: $e')),
+        );
+        return;
+      }
 
       if (!mounted) return;
 
@@ -422,29 +466,142 @@ class _RagDocumentSheetState extends State<_RagDocumentSheet>
       if (!mounted) return;
 
       _tabController.animateTo(1);
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Đã tải lên "${uploaded.name}"'),
-        ),
+        SnackBar(content: Text('Đã tải lên "${uploaded.name}"')),
       );
-    } on RagApiException catch (e) {
+    } on PlatformException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Tải lên thất bại: ${e.message}')),
+        SnackBar(content: Text('Không thể truy cập bộ nhớ: ${e.message}')),
       );
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('Upload error: $e\n$st');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Không thể tải lên tài liệu: $e')),
       );
     } finally {
       if (!mounted) return;
-      setState(() {
-        _isUploading = false;
-      });
+      setState(() => _isUploading = false);
     }
   }
+
+  Future<List<int>?> _resolveFileBytes(PlatformFile file) async {
+    if (file.bytes != null && file.bytes!.isNotEmpty) {
+      return file.bytes!;
+    }
+
+    final path = file.path;
+    if (path == null || path.isEmpty) {
+      return null;
+    }
+
+    try {
+      final ioFile = File(path);
+      if (await ioFile.exists()) {
+        return await ioFile.readAsBytes();
+      }
+    } catch (e) {
+      debugPrint('Không thể đọc file từ đường dẫn: $e');
+    }
+    return null;
+  }
+
+  String _resolveMimeType(String filename) {
+    final ext = filename.split('.').last.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'doc':
+        return 'application/msword';
+      case 'docx':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      case 'txt':
+        return 'text/plain';
+      case 'md':
+        return 'text/markdown';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
+  // rag_document_sheet.dart
+  // Future<void> _persistDocumentToPocketBase({
+  //   required RagDocument document,
+  //   required List<int> bytes,
+  //   required String originalFileName,
+  // }) async {
+  //   try {
+  //     final pb = await getPocketbaseInstance();
+
+  //     // Lấy owner id từ phiên đăng nhập hiện tại (BẮT BUỘC theo schema)
+  //     final ownerId = pb.authStore.record?.id;
+  //     if (ownerId == null || ownerId.isEmpty) {
+  //       throw Exception('Chưa đăng nhập PocketBase (không có owner).');
+  //     }
+
+  //     // Chuẩn bị file multipart
+  //     final file = http.MultipartFile.fromBytes(
+  //       'file',
+  //       bytes,
+  //       filename: originalFileName,
+  //     );
+
+  //     // Map field THEO SCHEMA `documents` trong pb_schema.js
+  //     await pb.collection('documents').create(
+  //       body: {
+  //         'title': document.name, // text
+  //         'owner': ownerId, // relation -> users
+  //         'status': 'ingested', // "pending" | "ingested" | "error"
+  //         'chunk_count': document.chunkCount, // number
+  //         // 'emb_model': 'gemini-embedding-xxx',               // (tùy chọn) nếu muốn lưu
+  //         'ingested_at':
+  //             (document.uploadedAt ?? DateTime.now()).toIso8601String(), // date
+  //       },
+  //       files: [file], // file (maxSelect:1)
+  //     );
+
+  //     debugPrint('PocketBase sync OK for ${document.id}');
+  //   } catch (e, st) {
+  //     debugPrint('PocketBase sync failed: $e');
+  //     debugPrint('$st');
+
+  //     // Retry 1 lần (mạng chập chờn/CORS)
+  //     try {
+  //       await Future.delayed(const Duration(seconds: 2));
+  //       final pb2 = await getPocketbaseInstance();
+  //       final ownerId2 = pb2.authStore.record?.id;
+  //       if (ownerId2 == null || ownerId2.isEmpty) {
+  //         throw Exception(
+  //             'Chưa đăng nhập PocketBase (owner null) ở lần retry.');
+  //       }
+
+  //       await pb2.collection('documents').create(
+  //         body: {
+  //           'title': document.name,
+  //           'owner': ownerId2,
+  //           'status': 'ingested',
+  //           'chunk_count': document.chunkCount,
+  //           'ingested_at':
+  //               (document.uploadedAt ?? DateTime.now()).toIso8601String(),
+  //         },
+  //         files: [
+  //           http.MultipartFile.fromBytes('file', bytes,
+  //               filename: originalFileName),
+  //         ],
+  //       );
+
+  //       debugPrint('PocketBase sync retry OK for ${document.id}');
+  //     } catch (e2) {
+  //       debugPrint('Retry PocketBase failed: $e2');
+  //       if (!mounted) return;
+  //       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+  //         content: Text(
+  //             'Không thể đồng bộ với PocketBase. Tài liệu vẫn dùng được trong RAG.'),
+  //       ));
+  //     }
+  //   }
+  // }
 
   Future<void> _loadDocuments({String? preferId}) async {
     if (!mounted) return;
@@ -518,9 +675,8 @@ class _DocumentTile extends StatelessWidget {
           color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? const Color(0xFF2563EB)
-                : const Color(0xFFE5E7EB),
+            color:
+                isSelected ? const Color(0xFF2563EB) : const Color(0xFFE5E7EB),
           ),
           boxShadow: const [
             BoxShadow(

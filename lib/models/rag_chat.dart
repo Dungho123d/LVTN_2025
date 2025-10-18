@@ -87,6 +87,23 @@ class RagMessage {
     );
   }
 
+  /// Tạo [RagMessage] từ dữ liệu lịch sử đã lưu trữ.
+  factory RagMessage.history({
+    required RagMessageRole role,
+    required String text,
+    DateTime? timestamp,
+    List<RagContextSnippet> contexts = const [],
+    String? interactionId,
+  }) {
+    return RagMessage._(
+      role: role,
+      text: text,
+      timestamp: timestamp ?? DateTime.now(),
+      contexts: contexts,
+      interactionId: interactionId,
+    );
+  }
+
   bool get isUser => role == RagMessageRole.user;
 
   bool get isAssistant => role == RagMessageRole.assistant;
